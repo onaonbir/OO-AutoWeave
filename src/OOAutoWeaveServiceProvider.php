@@ -449,6 +449,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
         });
     }
 
+
     protected function registerConfiguredEventListeners(): void
     {
         $listeners = config('oo-auto-weave.event_listeners', []);

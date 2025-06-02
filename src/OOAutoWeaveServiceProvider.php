@@ -300,7 +300,6 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
-
         //MANUAL TRIGGER
         TriggerRegistry::register(
             key: 'manual',
@@ -383,10 +382,6 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
 //                'category' => 'Kayıt Olayları',
 //            ]
 //        );
-
-
-
-
 
     }
 

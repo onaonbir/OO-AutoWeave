@@ -4,8 +4,8 @@ namespace OnaOnbir\OOAutoWeave\Enums;
 
 enum ExecutionTypeEnum: string
 {
-    case DEFAULT = 'default'; // Her zaman çalışır
-    case RULED = 'ruled';     // Koşula göre çalışır
+    case DEFAULT = 'default';
+    case RULED = 'ruled';
 
     public function label(): string
     {

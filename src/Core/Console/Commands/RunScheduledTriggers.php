@@ -3,13 +3,13 @@
 namespace OnaOnbir\OOAutoWeave\Core\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use OnaOnbir\OOAutoWeave\Models\Trigger;
 use OnaOnbir\OOAutoWeave\Jobs\DispatchTriggerExecutionJob;
+use OnaOnbir\OOAutoWeave\Models\Trigger;
 
 class RunScheduledTriggers extends Command
 {
     protected $signature = 'oo-auto-weave:run-scheduled';
+
     protected $description = 'Zamanlanmış otomasyon tetikleyicilerini çalıştırır.';
 
     public function handle(): void

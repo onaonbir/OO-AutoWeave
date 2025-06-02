@@ -7,7 +7,6 @@ use OnaOnbir\OOAutoWeave\Models\Traits\JsonCast;
 
 class ActionSet extends Model
 {
-
     public function getTable(): string
     {
         return config('oo-auto-weave.tables.action_sets');

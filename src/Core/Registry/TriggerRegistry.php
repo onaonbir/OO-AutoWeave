@@ -77,7 +77,7 @@ class TriggerRegistry
     {
         return collect(static::$map)
             ->mapWithKeys(fn ($item, $key) => [
-                $key => $item['options']['label'] ?? "{$item['key']} ({$item['group']}/{$item['type']})"
+                $key => $item['options']['label'] ?? "{$item['key']} ({$item['group']}/{$item['type']})",
             ])
             ->toArray();
     }
@@ -87,7 +87,7 @@ class TriggerRegistry
         return collect(static::$map)
             ->groupBy(fn ($item) => "{$item['group']}/{$item['type']}")
             ->map(fn ($items) => collect($items)->mapWithKeys(fn ($item) => [
-                static::buildKey($item['key'], $item['group'], $item['type']) => $item['options']['label'] ?? $item['key']
+                static::buildKey($item['key'], $item['group'], $item['type']) => $item['options']['label'] ?? $item['key'],
             ]))
             ->toArray();
     }

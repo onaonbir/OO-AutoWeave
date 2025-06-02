@@ -11,7 +11,7 @@ class Rule
 
     public static function make(): static
     {
-        return new static();
+        return new static;
     }
 
     public function and(string $columnKey, string $operator, mixed $value): static
@@ -22,6 +22,7 @@ class Rule
             'value' => $value,
             'type' => 'and',
         ];
+
         return $this;
     }
 
@@ -33,6 +34,7 @@ class Rule
             'value' => $value,
             'type' => 'or',
         ];
+
         return $this;
     }
 

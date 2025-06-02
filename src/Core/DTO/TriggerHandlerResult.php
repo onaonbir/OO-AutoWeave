@@ -14,7 +14,7 @@ final class TriggerHandlerResult
 
     public static function allow(Model $trigger, array $context = []): static
     {
-        return new static(true, $trigger, $context);
+        return new self(true, $trigger, $context);
     }
 
     public static function deny(): static

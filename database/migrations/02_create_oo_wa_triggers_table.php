@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         Schema::create(config('oo-auto-weave.tables.triggers'), function (Blueprint $table) {
             $table->id();
 
@@ -19,10 +21,6 @@ return new class extends Migration {
             $table->string('group');
             $table->string('type');
 
-
-
-
-
             $table->json('settings')->nullable();
 
             $table->integer('order')->default(0);
@@ -31,7 +29,8 @@ return new class extends Migration {
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists(config('oo-auto-weave.tables.triggers'));
     }
 };

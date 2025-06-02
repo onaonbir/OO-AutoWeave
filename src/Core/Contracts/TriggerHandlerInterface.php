@@ -7,8 +7,5 @@ use OnaOnbir\OOAutoWeave\Models\Trigger;
 
 interface TriggerHandlerInterface
 {
-    /**
-     * @return TriggerHandlerResult
-     */
     public function handle(Trigger $trigger, array $context): TriggerHandlerResult;
 }

@@ -4,7 +4,6 @@ namespace OnaOnbir\OOAutoWeave\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -17,7 +16,9 @@ class DispatchTriggerForDeletedModel implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public string $modelClass;
+
     public int|string $modelId;
+
     public array $attributes;
 
     public function __construct(string $modelClass, int|string $modelId, array $attributes)
@@ -62,7 +63,7 @@ class DispatchTriggerForDeletedModel implements ShouldQueue
                     'trigger_id' => $trigger->id,
                 ], $source);
             } catch (\Throwable $e) {
-                Logger::error("Automation error: " . $e->getMessage(), [
+                Logger::error('Automation error: '.$e->getMessage(), [
                     'trigger_id' => $trigger->id,
                     'exception' => $e,
                 ], $source);

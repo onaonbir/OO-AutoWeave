@@ -4,8 +4,8 @@ return [
 
     'debug_logs' => env('OO_AUTO_WEAVE_DEBUG_LOGS', true),
     'worker_mode' => true,
-    'queue'=>[
-        "automation"=>"default"
+    'queue' => [
+        'automation' => 'default',
     ],
     'tables' => [
         'automations' => 'oo_wa_automations',

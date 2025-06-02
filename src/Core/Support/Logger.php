@@ -31,10 +31,11 @@ class Logger
 
     protected static function formatMessage(string $message, ?string $source = null): string
     {
-        $prefix = '[' . self::$defaultPrefix . ']';
+        $prefix = '['.self::$defaultPrefix.']';
         if ($source) {
-            $prefix .= ' - [' . strtoupper($source) . ']';
+            $prefix .= ' - ['.strtoupper($source).']';
         }
+
         return "{$prefix} {$message}";
     }
 }

@@ -12,7 +12,7 @@ class LogAction implements ActionInterface
         $title = $parameters['title'] ?? 'No Title';
         $message = $parameters['message'] ?? 'No Message';
 
-        Logger::info("LogAction executed", [
+        Logger::info('LogAction executed', [
             'title' => $title,
             'message' => $message,
             'context' => $context,

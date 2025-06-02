@@ -2,7 +2,6 @@
 
 namespace OnaOnbir\OOAutoWeave\Core\Registry;
 
-use Illuminate\Support\Facades\Log;
 use OnaOnbir\OOAutoWeave\Core\Contracts\ActionInterface;
 
 class ActionRegistry

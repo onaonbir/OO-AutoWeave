@@ -6,21 +6,23 @@ namespace OnaOnbir\OOAutoWeave\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use OnaOnbir\OOAutoWeave\Core\Registry\TriggerRegistry;
-use OnaOnbir\OOAutoWeave\Models\Trigger;
 use OnaOnbir\OOAutoWeave\Core\Support\Logger;
+use OnaOnbir\OOAutoWeave\Models\Trigger;
 
 class DispatchTriggerForUpdatedModel implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public string $modelClass;
+
     public int|string $modelId;
+
     public array $changedAttributes;
+
     public array $originalAttributes;
 
     public function __construct(string $modelClass, int|string $modelId, array $changed, array $original)
@@ -35,12 +37,13 @@ class DispatchTriggerForUpdatedModel implements ShouldQueue
     {
         $source = 'OnUpdated Job';
 
-        $model = (new $this->modelClass())->find($this->modelId);
+        $model = (new $this->modelClass)->find($this->modelId);
         if (! $model) {
-            Logger::warning("Model not found for updated event job", [
+            Logger::warning('Model not found for updated event job', [
                 'model' => $this->modelClass,
                 'id' => $this->modelId,
             ], $source);
+
             return;
         }
 
@@ -78,7 +81,7 @@ class DispatchTriggerForUpdatedModel implements ShouldQueue
                     'trigger_id' => $trigger->id,
                 ], $source);
             } catch (\Throwable $e) {
-                Logger::error("Automation error: " . $e->getMessage(), [
+                Logger::error('Automation error: '.$e->getMessage(), [
                     'trigger_id' => $trigger->id,
                     'exception' => $e,
                 ], $source);
@@ -86,4 +89,3 @@ class DispatchTriggerForUpdatedModel implements ShouldQueue
         }
     }
 }
-

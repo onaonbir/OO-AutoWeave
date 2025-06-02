@@ -15,6 +15,7 @@ class DispatchTriggerExecutionJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public Trigger $trigger;
+
     public array $context;
 
     public function __construct(Trigger $trigger, array $context = [])
@@ -34,8 +35,6 @@ class DispatchTriggerExecutionJob implements ShouldQueue
             ->active()
             ->where('key', $triggerKey)
             ->get()
-            ->each(fn($trigger) => DispatchTriggerExecutionJob::dispatch($trigger, $context));
+            ->each(fn ($trigger) => DispatchTriggerExecutionJob::dispatch($trigger, $context));
     }
 }
-
-

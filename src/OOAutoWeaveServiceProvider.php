@@ -3,22 +3,17 @@
 namespace OnaOnbir\OOAutoWeave;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use OnaOnbir\OOAutoWeave\Core\Console\Commands\RunScheduledTriggers;
 use OnaOnbir\OOAutoWeave\Core\DTO\TriggerHandlerResult;
-use OnaOnbir\OOAutoWeave\Core\Registry\TriggerRegistry;
 use OnaOnbir\OOAutoWeave\Core\Registry\ActionRegistry;
-
+use OnaOnbir\OOAutoWeave\Core\Registry\TriggerRegistry;
 use OnaOnbir\OOAutoWeave\Core\Support\Logger;
 use OnaOnbir\OOAutoWeave\Jobs\DispatchTriggerExecutionJob;
 use OnaOnbir\OOAutoWeave\Models\Trigger;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use function Laravel\Prompts\warning;
 
 class OOAutoWeaveServiceProvider extends PackageServiceProvider
 {
@@ -87,7 +82,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
 
     protected function registerDefaultTriggers(): void
     {
-        //RECORD UPDATED TRIGGER
+        // RECORD UPDATED TRIGGER
         TriggerRegistry::register(
             key: 'model_changes',
             group: 'model',
@@ -102,10 +97,11 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
                     'model' => $model ? get_class($model) : 'null',
                 ], $source);
 
-                if (!$model) {
+                if (! $model) {
                     Logger::info('No model found in context — trigger denied', [
                         'trigger_id' => $trigger->id,
                     ], $source);
+
                     return TriggerHandlerResult::deny();
                 }
 
@@ -117,10 +113,11 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
                     'expected_field' => $field,
                 ], $source);
 
-                if ($field && !array_key_exists($field, $changed)) {
+                if ($field && ! array_key_exists($field, $changed)) {
                     Logger::info('Watched field not changed — trigger denied', [
                         'field' => $field,
                     ], $source);
+
                     return TriggerHandlerResult::deny();
                 }
 
@@ -155,7 +152,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
-        //RECORD DELETED
+        // RECORD DELETED
         TriggerRegistry::register(
             key: 'model_changes',
             group: 'model',
@@ -178,6 +175,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
 
                 if (! $modelClass || empty($deletedAttributes)) {
                     Logger::info('Eksik model veya attribute bilgisi — trigger denied', [], $source);
+
                     return TriggerHandlerResult::deny();
                 }
 
@@ -207,8 +205,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
-
-        //SCHEDULED TRIGGER
+        // SCHEDULED TRIGGER
         TriggerRegistry::register(
             key: 'scheduled_automation',
             group: 'time',
@@ -233,7 +230,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
-        //EVENT TRIGGER
+        // EVENT TRIGGER
         TriggerRegistry::register(
             key: 'event_trigger',
             group: 'event',
@@ -258,7 +255,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
-        //JOB WATCHER
+        // JOB WATCHER
         TriggerRegistry::register(
             key: 'job_event',
             group: 'system',
@@ -300,12 +297,12 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
-        //MANUAL TRIGGER
+        // MANUAL TRIGGER
         TriggerRegistry::register(
             key: 'manual',
             group: 'custom',
             type: 'manual',
-            handler: fn(Trigger $trigger, array $context = []) => TriggerHandlerResult::allow($trigger, $context),
+            handler: fn (Trigger $trigger, array $context = []) => TriggerHandlerResult::allow($trigger, $context),
             options: [
                 'label' => 'Elle Tetikleme',
                 'description' => 'Elle tetiklenebilen otomasyon.',
@@ -314,80 +311,79 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ]
         );
 
+        //        TriggerRegistry::register(
+        //            key: 'record_created',
+        //            type: 'model',
+        //            handler: function (\OnaOnbir\OOAutoWeave\Models\Trigger $trigger, array $context = []): TriggerHandlerResult {
+        //                $model = $context['model'] ?? null;
+        //
+        //                if (! $model) return TriggerHandlerResult::deny();
+        //
+        //                \Illuminate\Support\Facades\Log::info('[OOAutoWeave::PROVIDER::record_created]', [
+        //                    'trigger_id' => $trigger->id,
+        //                    'model' => get_class($model),
+        //                    'model_id' => $model->getKey(),
+        //                ]);
+        //
+        //                return TriggerHandlerResult::allow($trigger, $context);
+        //            },
+        //            options: [
+        //                'is_model_trigger' => true,
+        //                'label' => 'Kayıt Oluşturulduğunda',
+        //                'description' => 'Bir model oluşturulduğunda tetiklenir.',
+        //                'fields' => [
+        //                    [
+        //                        'key' => 'model',
+        //                        'label' => 'Model Seçiniz',
+        //                        'type' => 'select',
+        //                        'options' => oo_wa_automation_get_eligible_models(),
+        //                        'hint' => 'Bu otomasyonun dinleyeceği model sınıfını seçiniz.',
+        //                    ],
+        //                ],
+        //                'icon' => 'plus-square',
+        //                'category' => 'Kayıt Olayları',
+        //            ]
+        //        );
 
-//        TriggerRegistry::register(
-//            key: 'record_created',
-//            type: 'model',
-//            handler: function (\OnaOnbir\OOAutoWeave\Models\Trigger $trigger, array $context = []): TriggerHandlerResult {
-//                $model = $context['model'] ?? null;
-//
-//                if (! $model) return TriggerHandlerResult::deny();
-//
-//                \Illuminate\Support\Facades\Log::info('[OOAutoWeave::PROVIDER::record_created]', [
-//                    'trigger_id' => $trigger->id,
-//                    'model' => get_class($model),
-//                    'model_id' => $model->getKey(),
-//                ]);
-//
-//                return TriggerHandlerResult::allow($trigger, $context);
-//            },
-//            options: [
-//                'is_model_trigger' => true,
-//                'label' => 'Kayıt Oluşturulduğunda',
-//                'description' => 'Bir model oluşturulduğunda tetiklenir.',
-//                'fields' => [
-//                    [
-//                        'key' => 'model',
-//                        'label' => 'Model Seçiniz',
-//                        'type' => 'select',
-//                        'options' => oo_wa_automation_get_eligible_models(),
-//                        'hint' => 'Bu otomasyonun dinleyeceği model sınıfını seçiniz.',
-//                    ],
-//                ],
-//                'icon' => 'plus-square',
-//                'category' => 'Kayıt Olayları',
-//            ]
-//        );
-
-//        TriggerRegistry::register(
-//            key: 'record_deleted',
-//            type: 'model',
-//            handler: function (\OnaOnbir\OOAutoWeave\Models\Trigger $trigger, array $context = []): TriggerHandlerResult {
-//                $model = $context['model'] ?? null;
-//
-//                if (! $model) return TriggerHandlerResult::deny();
-//
-//                \Illuminate\Support\Facades\Log::info('[OOAutoWeave::PROVIDER::record_deleted]', [
-//                    'trigger_id' => $trigger->id,
-//                    'model' => get_class($model),
-//                    'model_id' => $model->getKey(),
-//                ]);
-//
-//                return TriggerHandlerResult::allow($trigger, $context);
-//            },
-//            options: [
-//                'is_model_trigger' => true,
-//                'label' => 'Kayıt Silindiğinde',
-//                'description' => 'Bir model silindiğinde tetiklenir.',
-//                'fields' => [
-//                    [
-//                        'key' => 'model',
-//                        'label' => 'Model Seçiniz',
-//                        'type' => 'select',
-//                        'options' => oo_wa_automation_get_eligible_models(),
-//                        'hint' => 'Bu otomasyonun dinleyeceği model sınıfını seçiniz.',
-//                    ],
-//                ],
-//                'icon' => 'trash-2',
-//                'category' => 'Kayıt Olayları',
-//            ]
-//        );
+        //        TriggerRegistry::register(
+        //            key: 'record_deleted',
+        //            type: 'model',
+        //            handler: function (\OnaOnbir\OOAutoWeave\Models\Trigger $trigger, array $context = []): TriggerHandlerResult {
+        //                $model = $context['model'] ?? null;
+        //
+        //                if (! $model) return TriggerHandlerResult::deny();
+        //
+        //                \Illuminate\Support\Facades\Log::info('[OOAutoWeave::PROVIDER::record_deleted]', [
+        //                    'trigger_id' => $trigger->id,
+        //                    'model' => get_class($model),
+        //                    'model_id' => $model->getKey(),
+        //                ]);
+        //
+        //                return TriggerHandlerResult::allow($trigger, $context);
+        //            },
+        //            options: [
+        //                'is_model_trigger' => true,
+        //                'label' => 'Kayıt Silindiğinde',
+        //                'description' => 'Bir model silindiğinde tetiklenir.',
+        //                'fields' => [
+        //                    [
+        //                        'key' => 'model',
+        //                        'label' => 'Model Seçiniz',
+        //                        'type' => 'select',
+        //                        'options' => oo_wa_automation_get_eligible_models(),
+        //                        'hint' => 'Bu otomasyonun dinleyeceği model sınıfını seçiniz.',
+        //                    ],
+        //                ],
+        //                'icon' => 'trash-2',
+        //                'category' => 'Kayıt Olayları',
+        //            ]
+        //        );
 
     }
 
     protected function registerEventTriggerListeners(): void
     {
-        if (!app()->runningInConsole() || !Schema::hasTable('oo_wa_triggers')) {
+        if (! app()->runningInConsole() || ! Schema::hasTable('oo_wa_triggers')) {
             return;
         }
 
@@ -400,7 +396,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             ->each(function (Trigger $trigger) {
                 $eventClass = $trigger->settings['event'] ?? null;
 
-                if (!$eventClass || !class_exists($eventClass)) {
+                if (! $eventClass || ! class_exists($eventClass)) {
                     return;
                 }
 
@@ -415,7 +411,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
 
     protected function registerJobEventListeners(): void
     {
-        if (!app()->runningInConsole() || !Schema::hasTable('oo_wa_triggers')) {
+        if (! app()->runningInConsole() || ! Schema::hasTable('oo_wa_triggers')) {
             return;
         }
 
@@ -429,10 +425,10 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             }
 
             DispatchTriggerExecutionJob::dispatchForKey('job_event', [
-                "attributes"=>[
+                'attributes' => [
                     'job_class' => $jobClass,
                     'status' => 'completed',
-                ]
+                ],
             ]);
         });
 
@@ -445,10 +441,10 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
             }
 
             DispatchTriggerExecutionJob::dispatchForKey('job_event', [
-                "attributes"=>[
+                'attributes' => [
                     'job_class' => $jobClass,
                     'status' => 'completed',
-                ]
+                ],
             ]);
         });
     }
@@ -457,7 +453,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
     {
         $listeners = config('oo-auto-weave.event_listeners', []);
         foreach ($listeners as $event => $handlers) {
-            foreach ((array)$handlers as $handler) {
+            foreach ((array) $handlers as $handler) {
                 Event::listen($event, $handler);
             }
         }

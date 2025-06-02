@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         Schema::create(config('oo-auto-weave.tables.actions'), function (Blueprint $table) {
             $table->id();
 
@@ -14,7 +16,7 @@ return new class extends Migration {
                 ->onDelete('cascade');
 
             $table->string('type');
-            $table->string('branch_type')->nullable()->default("default");
+            $table->string('branch_type')->nullable()->default('default');
             $table->json('parameters')->nullable();
             $table->integer('order')->default(0);
             $table->string('status')->default('active');
@@ -23,7 +25,8 @@ return new class extends Migration {
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists(config('oo-auto-weave.tables.actions'));
     }
 };

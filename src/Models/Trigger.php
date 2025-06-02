@@ -20,7 +20,7 @@ class Trigger extends Model
         'label',
         'settings',
         'order',
-        'status'
+        'status',
     ];
 
     protected $casts = [

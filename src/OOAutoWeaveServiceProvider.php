@@ -16,7 +16,6 @@ use OnaOnbir\OOAutoWeave\Models\Trigger;
 
 class OOAutoWeaveServiceProvider extends ServiceProvider
 {
-
     private string $packageName = 'oo-auto-weave';
 
     public function boot()
@@ -42,13 +41,11 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         ], $this->packageName.'-config');
 
         $this->commands([
-           //
+            //
         ]);
 
         $this->registerConfiguredEventListeners();
     }
-
-
 
     public function packageBooted(): void
     {

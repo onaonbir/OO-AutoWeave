@@ -5,6 +5,7 @@ namespace OnaOnbir\OOAutoWeave;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
 use OnaOnbir\OOAutoWeave\Core\Console\Commands\RunScheduledTriggers;
 use OnaOnbir\OOAutoWeave\Core\DTO\TriggerHandlerResult;
 use OnaOnbir\OOAutoWeave\Core\Registry\ActionRegistry;
@@ -12,31 +13,42 @@ use OnaOnbir\OOAutoWeave\Core\Registry\TriggerRegistry;
 use OnaOnbir\OOAutoWeave\Core\Support\Logger;
 use OnaOnbir\OOAutoWeave\Jobs\DispatchTriggerExecutionJob;
 use OnaOnbir\OOAutoWeave\Models\Trigger;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class OOAutoWeaveServiceProvider extends PackageServiceProvider
+class OOAutoWeaveServiceProvider extends ServiceProvider
 {
-    public function configurePackage(Package $package): void
+
+    private string $packageName = 'oo-auto-weave';
+
+    public function boot()
     {
-        $package
-            ->name('oo-auto-weave')
-            ->hasConfigFile()
-            ->discoversMigrations()
-            ->hasMigrations([
-                '01_create_oo_wa_automations_table',
-                '02_create_oo_wa_triggers_table',
-                '03_create_oo_wa_action_sets_table',
-                '04_create_oo_wa_actions_table',
-            ])
-            ->hasInstallCommand(function ($command) {
-                $command
-                    ->publishConfigFile()
-                    ->publishMigrations()
-                    ->askToStarRepoOnGitHub('onaonbir/oo-auto-weave')
-                    ->askToRunMigrations();
-            });
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        $this->packageBooted();
     }
+
+    public function register()
+    {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/'.$this->packageName.'.php',
+            $this->packageName
+        );
+
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], $this->packageName.'-migrations');
+
+        $this->publishes([
+            __DIR__.'/../config/'.$this->packageName.'.php' => config_path($this->packageName.'.php'),
+        ], $this->packageName.'-config');
+
+        $this->commands([
+           //
+        ]);
+
+        $this->registerConfiguredEventListeners();
+    }
+
+
 
     public function packageBooted(): void
     {
@@ -451,7 +463,7 @@ class OOAutoWeaveServiceProvider extends PackageServiceProvider
 
     protected function registerConfiguredEventListeners(): void
     {
-        $listeners = config('oo-auto-weave.event_listeners', []);
+        $listeners = config($this->packageName.'.event_listeners', []);
         foreach ($listeners as $event => $handlers) {
             foreach ((array) $handlers as $handler) {
                 Event::listen($event, $handler);

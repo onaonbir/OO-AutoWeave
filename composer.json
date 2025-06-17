@@ -1,6 +1,6 @@
 {
     "name": "onaonbir/oo-auto-weave",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "autoload": {
         "files": [
             "helpers/helpers.php"
@@ -29,6 +29,6 @@
         }
     ],
     "require": {
-        "spatie/laravel-package-tools": "^1.92"
+
     }
 }

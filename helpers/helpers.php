@@ -1,15 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use OnaOnbir\OOAutoWeave\Models\AutomationAction;
-
-if (! function_exists('test_func')) {
-    function test_func()
-    {
-        return 'HEHE TEST';
-    }
-}
 
 if (! function_exists('hexToRgba')) {
 
@@ -53,42 +44,5 @@ if (! function_exists('oo_wa_automation_get_eligible_models')) {
         }
 
         return $eligibleModels;
-    }
-}
-
-if (! function_exists('cloneAutomationActionWithExecutions')) {
-    function cloneAutomationActionWithExecutions(int $actionId, array $overrides = []): AutomationAction
-    {
-        return DB::transaction(function () use ($actionId, $overrides) {
-            $original = AutomationAction::with('executions')->findOrFail($actionId);
-
-            // Yeni action kopyalanıyor
-            $cloned = $original->replicate([
-                'id', 'created_at', 'updated_at',
-            ]);
-
-            // Varsayılan olarak isme "(Kopya)" ekle
-            $cloned->name = $overrides['name'] ?? $original->name.' (Kopya)';
-
-            // Diğer override alanları uygula
-            foreach ($overrides as $key => $value) {
-                if ($key !== 'name') {
-                    $cloned->{$key} = $value;
-                }
-            }
-
-            $cloned->push();
-
-            // Tüm executions'ları klonla
-            foreach ($original->executions as $execution) {
-                $newExecution = $execution->replicate([
-                    'id', 'created_at', 'updated_at', 'order',
-                ]);
-                $newExecution->automation_action_id = $cloned->id;
-                $newExecution->save();
-            }
-
-            return $cloned;
-        });
     }
 }

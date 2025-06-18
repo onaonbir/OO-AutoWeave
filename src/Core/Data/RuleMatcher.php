@@ -81,16 +81,18 @@ class RuleMatcher
 
         // WILDCARD DESTEKLİ FLAT KEY EŞLEŞME
         foreach ($data as $k => $v) {
-            if (!is_string($k)) continue;
+            if (! is_string($k)) {
+                continue;
+            }
 
             $pattern = str_replace('\*', '\d+', preg_quote($flatKey));
-            if (preg_match('/^' . $pattern . '$/', $k)) {
+            if (preg_match('/^'.$pattern.'$/', $k)) {
                 $results[] = $v;
             }
         }
 
         // Eğer yukarıda eşleşmediyse, recursive fallback
-        if (!empty($results)) {
+        if (! empty($results)) {
             return $results;
         }
 
@@ -98,11 +100,13 @@ class RuleMatcher
         $currentKey = array_shift($keys);
 
         if ($currentKey === '*') {
-            if (!is_array($data)) return [];
+            if (! is_array($data)) {
+                return [];
+            }
 
             $values = [];
             foreach ($data as $item) {
-                $values = array_merge($values, self::extractWildcardValues((array)$item, $keys));
+                $values = array_merge($values, self::extractWildcardValues((array) $item, $keys));
             }
 
             return $values;
@@ -114,7 +118,7 @@ class RuleMatcher
             return isset($value) ? [$value] : [];
         }
 
-        return self::extractWildcardValues((array)$value, $keys);
+        return self::extractWildcardValues((array) $value, $keys);
     }
 
     public static function matchPaths(array $rules, array $context): array
@@ -126,7 +130,7 @@ class RuleMatcher
             $operator = $rule['operator'] ?? null;
             $value = $rule['value'] ?? null;
 
-            if (!is_string($columnKey) || !is_string($operator)) {
+            if (! is_string($columnKey) || ! is_string($operator)) {
                 continue;
             }
 
@@ -134,7 +138,7 @@ class RuleMatcher
             $pattern = str_replace('\*', '\d+', preg_quote($columnKey));
 
             foreach ($context as $flatKey => $itemValue) {
-                if (preg_match('/^' . $pattern . '$/', $flatKey)) {
+                if (preg_match('/^'.$pattern.'$/', $flatKey)) {
                     if (self::evaluate($itemValue, $operator, $value)) {
                         $matches[] = [
                             'path' => $flatKey,
@@ -149,4 +153,3 @@ class RuleMatcher
         return $matches;
     }
 }
-

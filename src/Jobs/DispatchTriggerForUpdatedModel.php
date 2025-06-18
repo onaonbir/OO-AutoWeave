@@ -32,7 +32,7 @@ class DispatchTriggerForUpdatedModel implements ShouldQueue
         $this->changedAttributes = $changed;
         $this->originalAttributes = $original;
 
-        $this->onQueue(config('oo-auto-weave.queue.automation',"default"));
+        $this->onQueue(config('oo-auto-weave.queue.automation', 'default'));
     }
 
     public function handle(): void

@@ -27,7 +27,7 @@ class DispatchTriggerForDeletedModel implements ShouldQueue
         $this->modelId = $modelId;
         $this->attributes = $attributes;
 
-        $this->onQueue(config('oo-auto-weave.queue.automation',"default"));
+        $this->onQueue(config('oo-auto-weave.queue.automation', 'default'));
     }
 
     public function handle(): void

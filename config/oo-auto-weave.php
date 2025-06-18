@@ -3,7 +3,7 @@
 return [
 
     'debug_logs' => env('OO_AUTO_WEAVE_DEBUG_LOGS', false),
-    'worker_mode' => true,//UNUSED FIELD
+    'worker_mode' => true, // UNUSED FIELD
     'placeholders' => [
         'variable' => ['start' => '{{', 'end' => '}}'],
         'function' => ['start' => '@@', 'end' => '@@'],

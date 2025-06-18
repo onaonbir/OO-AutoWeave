@@ -164,7 +164,6 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             ]
         );
 
-
         // RECORD UPDATED TRIGGER
         TriggerRegistry::register(
             key: 'model_changes',

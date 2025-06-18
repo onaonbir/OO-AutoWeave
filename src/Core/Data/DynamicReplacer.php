@@ -4,8 +4,6 @@ namespace OnaOnbir\OOAutoWeave\Core\Data;
 
 use Illuminate\Support\Arr;
 
-
-
 class DynamicReplacer
 {
     public static function replace(mixed $template, array $context): mixed
@@ -34,6 +32,7 @@ class DynamicReplacer
             // Karmaşık string içinde değişken varsa → string olarak dön
             return preg_replace_callback('/\{\{(.*?)\}\}/', function ($matches) use ($context) {
                 $resolved = self::resolveRaw(trim($matches[1]), $context);
+
                 return is_array($resolved) ? json_encode($resolved) : $resolved;
             }, $template);
         }
@@ -54,9 +53,9 @@ class DynamicReplacer
     {
         return match ($function) {
             'json_encode' => json_encode($value),
-            'implode'     => is_array($value) ? implode($options['separator'] ?? ',', $value) : (string)$value,
+            'implode' => is_array($value) ? implode($options['separator'] ?? ',', $value) : (string) $value,
             'custom_function' => self::customFunctionExample($value, $options),
-            default       => $value,
+            default => $value,
         };
     }
 
@@ -64,10 +63,10 @@ class DynamicReplacer
     {
         $prefix = $options['prefix'] ?? '';
         if (is_array($value)) {
-            return implode(', ', array_map(fn ($v) => $prefix . $v, $value));
+            return implode(', ', array_map(fn ($v) => $prefix.$v, $value));
         }
 
-        return $prefix . $value;
+        return $prefix.$value;
     }
 
     protected static function extractWildcardValues(array $context, array $keys): array
@@ -76,10 +75,12 @@ class DynamicReplacer
 
         // 1. Flat dot notation key'lerde eşleşme varsa
         foreach ($context as $flatKey => $flatValue) {
-            if (!is_string($flatKey)) continue;
+            if (! is_string($flatKey)) {
+                continue;
+            }
 
             $pattern = str_replace('\*', '\d+', preg_quote(implode('.', $keys)));
-            if (preg_match('/^' . $pattern . '$/', $flatKey)) {
+            if (preg_match('/^'.$pattern.'$/', $flatKey)) {
                 $results[] = $flatValue;
             }
         }
@@ -94,14 +95,19 @@ class DynamicReplacer
         $currentKey = array_shift($keys);
 
         if ($currentKey === '*') {
-            if (!is_array($context)) return [];
+            if (! is_array($context)) {
+                return [];
+            }
             foreach ($context as $item) {
                 $results = array_merge($results, self::resolveFromNestedArray($item, $keys));
             }
+
             return $results;
         }
 
-        if (!isset($context[$currentKey])) return [];
+        if (! isset($context[$currentKey])) {
+            return [];
+        }
 
         if (empty($keys)) {
             return [$context[$currentKey]];

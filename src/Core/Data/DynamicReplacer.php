@@ -4,6 +4,8 @@ namespace OnaOnbir\OOAutoWeave\Core\Data;
 
 use Illuminate\Support\Arr;
 
+
+
 class DynamicReplacer
 {
     public static function replace(mixed $template, array $context): mixed
@@ -13,86 +15,93 @@ class DynamicReplacer
         }
 
         if (is_string($template)) {
-            // 1. Fonksiyonlu ifadeleri yakala (@@json_encode(...)@@ gibi)
-            $template = preg_replace_callback('/@@(\w+)\((.*?)\)@@/', function ($matches) use ($context) {
+            // Fonksiyon ifadeleri: @@json_encode(...)@@, @@implode(...)@@
+            $template = preg_replace_callback('/@@(\w+)\((.*?)(?:,\s*(\{.*\}))?\)@@/', function ($matches) use ($context) {
                 $function = $matches[1];
                 $inner = trim($matches[2]);
+                $options = isset($matches[3]) ? json_decode($matches[3], true) : [];
 
-                // İçerideki {{...}} çözülmeli
                 $resolved = self::replace($inner, $context);
 
-                return self::applyFunction($function, $resolved);
+                return self::applyFunction($function, $resolved, $options);
             }, $template);
 
-            // 2. Standart {{...}} ifadelerini çöz
-            $template = preg_replace_callback('/\{\{(.*?)\}\}/', function ($matches) use ($context) {
-                $key = trim($matches[1]);
+            // Eğer sadece {{...}} içeriyorsa → tek ifade gibi dön
+            if (preg_match('/^\{\{(.*?)\}\}$/', $template, $singleMatch)) {
+                return self::resolveRaw(trim($singleMatch[1]), $context);
+            }
 
-                if (str_contains($key, '*')) {
-                    $values = self::extractWildcardValues($context, explode('.', $key));
-                    return implode(',', array_filter($values, fn ($v) => $v !== null));
-                }
-
-                $value = Arr::get($context, $key);
-                return is_array($value) ? json_encode($value) : ($value ?? '');
+            // Karmaşık string içinde değişken varsa → string olarak dön
+            return preg_replace_callback('/\{\{(.*?)\}\}/', function ($matches) use ($context) {
+                $resolved = self::resolveRaw(trim($matches[1]), $context);
+                return is_array($resolved) ? json_encode($resolved) : $resolved;
             }, $template);
-
-            return $template;
         }
 
         return $template;
     }
 
-    protected static function applyFunction(string $function, mixed $value): mixed
+    protected static function resolveRaw(string $key, array $context): mixed
+    {
+        if (str_contains($key, '*')) {
+            return self::extractWildcardValues($context, explode('.', $key));
+        }
+
+        return Arr::get($context, $key);
+    }
+
+    protected static function applyFunction(string $function, mixed $value, array $options = []): mixed
     {
         return match ($function) {
-            'json_encode' => json_encode(is_string($value) ? explode(',', $value) : $value),
-            'count'       => is_array($value) ? count($value) : 0,
+            'json_encode' => json_encode($value),
+            'implode'     => is_array($value) ? implode($options['separator'] ?? ',', $value) : (string)$value,
+            'custom_function' => self::customFunctionExample($value, $options),
             default       => $value,
         };
+    }
+
+    protected static function customFunctionExample(mixed $value, array $options = []): string
+    {
+        $prefix = $options['prefix'] ?? '';
+        if (is_array($value)) {
+            return implode(', ', array_map(fn ($v) => $prefix . $v, $value));
+        }
+
+        return $prefix . $value;
     }
 
     protected static function extractWildcardValues(array $context, array $keys): array
     {
         $results = [];
 
-        // 1. Flat key çözümlemesi (örneğin r_causer.r_managers.0.name)
-        $wildcardPath = implode('.', $keys);
-        $wildcardPattern = str_replace('\*', '[0-9]+', preg_quote($wildcardPath));
-        $regex = '/^' . $wildcardPattern . '$/';
+        // 1. Flat dot notation key'lerde eşleşme varsa
+        foreach ($context as $flatKey => $flatValue) {
+            if (!is_string($flatKey)) continue;
 
-        foreach ($context as $flatKey => $value) {
-            if (preg_match($regex, $flatKey)) {
-                $results[] = $value;
+            $pattern = str_replace('\*', '\d+', preg_quote(implode('.', $keys)));
+            if (preg_match('/^' . $pattern . '$/', $flatKey)) {
+                $results[] = $flatValue;
             }
         }
 
-        // 2. Nested fallback çözüm
-        $resolvedFromNested = self::resolveFromNestedArray($context, $keys);
-        return array_merge($results, $resolvedFromNested);
+        // 2. Nested lookup fallback
+        return array_merge($results, self::resolveFromNestedArray($context, $keys));
     }
 
     protected static function resolveFromNestedArray(array $context, array $keys): array
     {
         $results = [];
-
         $currentKey = array_shift($keys);
 
         if ($currentKey === '*') {
-            if (!is_array($context)) {
-                return [];
-            }
-
+            if (!is_array($context)) return [];
             foreach ($context as $item) {
                 $results = array_merge($results, self::resolveFromNestedArray($item, $keys));
             }
-
             return $results;
         }
 
-        if (!isset($context[$currentKey])) {
-            return [];
-        }
+        if (!isset($context[$currentKey])) return [];
 
         if (empty($keys)) {
             return [$context[$currentKey]];

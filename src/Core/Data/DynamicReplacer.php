@@ -13,63 +13,91 @@ class DynamicReplacer
         }
 
         if (is_string($template)) {
-            return preg_replace_callback('/\{\{(.*?)\}\}/', function ($matches) use ($context) {
+            // 1. Fonksiyonlu ifadeleri yakala (@@json_encode(...)@@ gibi)
+            $template = preg_replace_callback('/@@(\w+)\((.*?)\)@@/', function ($matches) use ($context) {
+                $function = $matches[1];
+                $inner = trim($matches[2]);
+
+                // İçerideki {{...}} çözülmeli
+                $resolved = self::replace($inner, $context);
+
+                return self::applyFunction($function, $resolved);
+            }, $template);
+
+            // 2. Standart {{...}} ifadelerini çöz
+            $template = preg_replace_callback('/\{\{(.*?)\}\}/', function ($matches) use ($context) {
                 $key = trim($matches[1]);
 
-                // Eğer wildcard içeriyorsa
                 if (str_contains($key, '*')) {
-                    return self::extractWildcardValues($context, explode('.', $key));
+                    $values = self::extractWildcardValues($context, explode('.', $key));
+                    return implode(',', array_filter($values, fn ($v) => $v !== null));
                 }
 
-                // Normal birebir değer çekme
                 $value = Arr::get($context, $key);
-
                 return is_array($value) ? json_encode($value) : ($value ?? '');
             }, $template);
+
+            return $template;
         }
 
         return $template;
     }
 
-    protected static function extractWildcardValues(array $context, array $keys, string $currentPath = '', array &$collected = []): string
+    protected static function applyFunction(string $function, mixed $value): mixed
     {
+        return match ($function) {
+            'json_encode' => json_encode(is_string($value) ? explode(',', $value) : $value),
+            'count'       => is_array($value) ? count($value) : 0,
+            default       => $value,
+        };
+    }
+
+    protected static function extractWildcardValues(array $context, array $keys): array
+    {
+        $results = [];
+
+        // 1. Flat key çözümlemesi (örneğin r_causer.r_managers.0.name)
+        $wildcardPath = implode('.', $keys);
+        $wildcardPattern = str_replace('\*', '[0-9]+', preg_quote($wildcardPath));
+        $regex = '/^' . $wildcardPattern . '$/';
+
+        foreach ($context as $flatKey => $value) {
+            if (preg_match($regex, $flatKey)) {
+                $results[] = $value;
+            }
+        }
+
+        // 2. Nested fallback çözüm
+        $resolvedFromNested = self::resolveFromNestedArray($context, $keys);
+        return array_merge($results, $resolvedFromNested);
+    }
+
+    protected static function resolveFromNestedArray(array $context, array $keys): array
+    {
+        $results = [];
+
         $currentKey = array_shift($keys);
 
         if ($currentKey === '*') {
-            // Şu anki pathte kaç tane eleman var?
-            $prefix = rtrim($currentPath, '.');
-
-            $subItems = array_filter(array_keys($context), fn ($k) => str_starts_with($k, $prefix));
-            $indexGroups = [];
-
-            foreach ($subItems as $subKey) {
-                $remaining = str_replace($prefix.'.', '', $subKey);
-                $parts = explode('.', $remaining);
-                if (is_numeric($parts[0])) {
-                    $indexGroups[$parts[0]] = true;
-                }
+            if (!is_array($context)) {
+                return [];
             }
 
-            foreach (array_keys($indexGroups) as $index) {
-                self::extractWildcardValues($context, array_merge([$index], $keys), $currentPath, $collected);
+            foreach ($context as $item) {
+                $results = array_merge($results, self::resolveFromNestedArray($item, $keys));
             }
 
-            return implode(',', array_filter($collected)); // Burada toplananları birleştiriyoruz
+            return $results;
         }
 
-        $currentPath = $currentPath ? "{$currentPath}.{$currentKey}" : $currentKey;
+        if (!isset($context[$currentKey])) {
+            return [];
+        }
 
         if (empty($keys)) {
-            $value = Arr::get($context, $currentPath);
-            if (is_array($value)) {
-                $collected[] = json_encode($value);
-            } else {
-                $collected[] = $value;
-            }
-        } else {
-            self::extractWildcardValues($context, $keys, $currentPath, $collected);
+            return [$context[$currentKey]];
         }
 
-        return implode(',', array_filter($collected));
+        return self::resolveFromNestedArray($context[$currentKey], $keys);
     }
 }

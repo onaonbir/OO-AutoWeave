@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use OnaOnbir\OOAutoWeave\Core\Console\Commands\RunScheduledTriggers;
 use OnaOnbir\OOAutoWeave\Core\DTO\TriggerHandlerResult;
 use OnaOnbir\OOAutoWeave\Core\Registry\ActionRegistry;
+use OnaOnbir\OOAutoWeave\Core\Registry\FunctionRegistry;
 use OnaOnbir\OOAutoWeave\Core\Registry\TriggerRegistry;
 use OnaOnbir\OOAutoWeave\Core\Support\Logger;
 use OnaOnbir\OOAutoWeave\Jobs\DispatchTriggerExecutionJob;
@@ -54,6 +55,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         $this->registerConfiguredEventListeners();
         $this->registerJobEventListeners();
         $this->registerEventTriggerListeners();
+        $this->registerFunctionRegisters();
     }
 
     public function packageRegistered(): void
@@ -61,6 +63,17 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         $this->commands([
             RunScheduledTriggers::class,
         ]);
+    }
+
+    private function registerFunctionRegisters(): void
+    {
+        FunctionRegistry::register('json_encode', fn ($value, $options) => json_encode($value));
+
+        FunctionRegistry::register('implode', function ($value, $options) {
+            return is_array($value) ? implode($options['separator'] ?? ',', $value) : (string) $value;
+        });
+
+        FunctionRegistry::register('custom_function', fn ($value, $options) => '❗️TODO: örnek');
     }
 
     private function registerDefaultActions(): void

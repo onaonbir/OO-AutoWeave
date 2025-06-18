@@ -2,8 +2,12 @@
 
 return [
 
-    'debug_logs' => env('OO_AUTO_WEAVE_DEBUG_LOGS', true),
+    'debug_logs' => env('OO_AUTO_WEAVE_DEBUG_LOGS', false),
     'worker_mode' => true,
+    'placeholders' => [
+        'variable' => ['start' => '{{', 'end' => '}}'],
+        'function' => ['start' => '@@', 'end' => '@@'],
+    ],
     'queue' => [
         'automation' => 'default',
     ],

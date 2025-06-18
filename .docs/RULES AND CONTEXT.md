@@ -114,6 +114,40 @@ Aşağıdaki route ile hem rule eşleşmesini hem de context mapping işlemini t
         $undotted = Arr::undot($context);
 
         dd($isMatched, $undotted, $replaced);
+    });    
+    
+    
+    Route::get('context-extractor-test-with-functions', function () {
+
+       $context = [
+            'user_ids' => [
+                ['id' => 1],
+                ['id' => 2],
+            ],
+            'r_causer.r_managers.0.name' => 'Ahmet',
+            'r_causer.r_managers.1.name' => 'Ayşe',
+            'r_brand.name' => 'Ayşe',
+            'notification' => [
+                'title' => 'Yeni bir form geldi size :/',
+                'body' => 'Burası mesaj alanı önemli olan herşey burada gönderilicektir. Ama işte bi garip çalışıyor :/',
+            ]
+        ];
+
+        $replaced = DynamicReplacer::replace([
+            'user_ids' => '{{user_ids}}',
+            'user_ids_array' => '{{user_ids.*.id}}',
+            'user_ids_array_json' => '@@json_encode({{user_ids.*.id}})@@',
+            'title' => '{{notification.title}}',
+            'body' => '{{notification.body}}',
+            'body prefix' => '@@cusom_function(simple_text, {"prefix": "👤 "})@@',
+            'gönderen yöneticiler' => '{{r_causer.r_managers.*.name}}',
+            'gönderen yöneticiler implode' => '@@implode({{r_causer.r_managers.*.name}})@@',
+            'gönderen yöneticiler json' => '@@json_encode({{r_causer.r_managers.*.name}})@@',
+            'gönderen yöneticiler custom func' => '@@custom_function({{r_causer.r_managers.*.name}}, {"prefix": "👤 "})@@',
+            'marka' => '{{r_brand.name}}',
+        ], $context);
+
+        dd($context, $replaced);
     });
 ```
 

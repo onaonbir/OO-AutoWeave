@@ -13,7 +13,7 @@ class DynamicReplacer
             return array_map(fn ($item) => self::replace($item, $context), $template);
         }
 
-        if (!is_string($template)) {
+        if (! is_string($template)) {
             return $template;
         }
 
@@ -31,6 +31,7 @@ class DynamicReplacer
             $options = isset($matches[3]) ? json_decode($matches[3], true) : [];
 
             $resolved = self::replace($inner, $context);
+
             return self::applyFunction($function, $resolved, $options);
         }, $template);
 
@@ -42,6 +43,7 @@ class DynamicReplacer
         // Karmaşık string içinde değişken varsa → string olarak döndür
         return preg_replace_callback($varRegex, function ($matches) use ($context) {
             $resolved = self::resolveRaw(trim($matches[1]), $context);
+
             return is_array($resolved) ? json_encode($resolved) : $resolved;
         }, $template);
     }
@@ -50,6 +52,7 @@ class DynamicReplacer
     {
         $start = preg_quote($config['start'], '/');
         $end = preg_quote($config['end'], '/');
+
         return "/{$start}(\w+)\((.*?)(?:,\s*(\{.*\}))?\){$end}/";
     }
 
@@ -57,6 +60,7 @@ class DynamicReplacer
     {
         $start = preg_quote($config['start'], '/');
         $end = preg_quote($config['end'], '/');
+
         return "/{$start}(.*?){$end}/";
     }
 
@@ -64,6 +68,7 @@ class DynamicReplacer
     {
         $start = preg_quote($config['start'], '/');
         $end = preg_quote($config['end'], '/');
+
         return "/^{$start}(.*?){$end}$/";
     }
 
@@ -86,12 +91,12 @@ class DynamicReplacer
         $results = [];
 
         foreach ($context as $flatKey => $flatValue) {
-            if (!is_string($flatKey)) {
+            if (! is_string($flatKey)) {
                 continue;
             }
 
             $pattern = str_replace('\*', '\d+', preg_quote(implode('.', $keys)));
-            if (preg_match('/^' . $pattern . '$/', $flatKey)) {
+            if (preg_match('/^'.$pattern.'$/', $flatKey)) {
                 $results[] = $flatValue;
             }
         }
@@ -105,7 +110,7 @@ class DynamicReplacer
         $currentKey = array_shift($keys);
 
         if ($currentKey === '*') {
-            if (!is_array($context)) {
+            if (! is_array($context)) {
                 return [];
             }
 
@@ -116,7 +121,7 @@ class DynamicReplacer
             return $results;
         }
 
-        if (!isset($context[$currentKey])) {
+        if (! isset($context[$currentKey])) {
             return [];
         }
 

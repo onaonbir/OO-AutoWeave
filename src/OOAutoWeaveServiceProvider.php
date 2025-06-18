@@ -106,7 +106,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
     {
         // RECORD CREATED TRIGGER
         TriggerRegistry::register(
-            key: 'model_created',
+            key: 'model_changes',
             group: 'model',
             type: 'record_created',
             handler: function (\OnaOnbir\OOAutoWeave\Models\Trigger $trigger, array $context = []): TriggerHandlerResult {

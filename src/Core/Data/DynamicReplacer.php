@@ -30,10 +30,12 @@ class DynamicReplacer
 
                 if (str_contains($key, '*')) {
                     $values = self::extractWildcardValues($context, explode('.', $key));
+
                     return implode(',', array_filter($values, fn ($v) => $v !== null));
                 }
 
                 $value = Arr::get($context, $key);
+
                 return is_array($value) ? json_encode($value) : ($value ?? '');
             }, $template);
 
@@ -47,8 +49,8 @@ class DynamicReplacer
     {
         return match ($function) {
             'json_encode' => json_encode(is_string($value) ? explode(',', $value) : $value),
-            'count'       => is_array($value) ? count($value) : 0,
-            default       => $value,
+            'count' => is_array($value) ? count($value) : 0,
+            default => $value,
         };
     }
 
@@ -59,7 +61,7 @@ class DynamicReplacer
         // 1. Flat key çözümlemesi (örneğin r_causer.r_managers.0.name)
         $wildcardPath = implode('.', $keys);
         $wildcardPattern = str_replace('\*', '[0-9]+', preg_quote($wildcardPath));
-        $regex = '/^' . $wildcardPattern . '$/';
+        $regex = '/^'.$wildcardPattern.'$/';
 
         foreach ($context as $flatKey => $value) {
             if (preg_match($regex, $flatKey)) {
@@ -69,6 +71,7 @@ class DynamicReplacer
 
         // 2. Nested fallback çözüm
         $resolvedFromNested = self::resolveFromNestedArray($context, $keys);
+
         return array_merge($results, $resolvedFromNested);
     }
 
@@ -79,7 +82,7 @@ class DynamicReplacer
         $currentKey = array_shift($keys);
 
         if ($currentKey === '*') {
-            if (!is_array($context)) {
+            if (! is_array($context)) {
                 return [];
             }
 
@@ -90,7 +93,7 @@ class DynamicReplacer
             return $results;
         }
 
-        if (!isset($context[$currentKey])) {
+        if (! isset($context[$currentKey])) {
             return [];
         }
 

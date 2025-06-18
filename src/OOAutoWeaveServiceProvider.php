@@ -104,6 +104,67 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
     protected function registerDefaultTriggers(): void
     {
+        // RECORD CREATED TRIGGER
+        TriggerRegistry::register(
+            key: 'model_created',
+            group: 'model',
+            type: 'record_created',
+            handler: function (\OnaOnbir\OOAutoWeave\Models\Trigger $trigger, array $context = []): TriggerHandlerResult {
+                $model = $context['model'] ?? null;
+                $source = 'Created Trigger Handler';
+
+                Logger::info('Created trigger handler started', [
+                    'trigger_id' => $trigger->id,
+                    'trigger_key' => $trigger->key,
+                    'model' => $model ? get_class($model) : 'null',
+                ], $source);
+
+                if (! $model) {
+                    Logger::warning('Model not found in context — trigger denied', [
+                        'trigger_id' => $trigger->id,
+                    ], $source);
+
+                    return TriggerHandlerResult::deny();
+                }
+
+                $expectedModel = $trigger->settings['model'] ?? null;
+
+                // Eğer trigger, belirli bir model sınıfı için tanımlandıysa onu doğrula
+                if ($expectedModel && $expectedModel !== get_class($model)) {
+                    Logger::info('Trigger model mismatch — denied', [
+                        'expected' => $expectedModel,
+                        'actual' => get_class($model),
+                    ], $source);
+
+                    return TriggerHandlerResult::deny();
+                }
+
+                Logger::info('Created trigger allowed', [
+                    'trigger_id' => $trigger->id,
+                    'model_id' => $model->getKey(),
+                ], $source);
+
+                return TriggerHandlerResult::allow($trigger, $context);
+            },
+            options: [
+                'is_model_trigger' => true,
+                'label' => 'Kayıt Oluşturulduğunda',
+                'description' => 'Yeni bir kayıt oluşturulduğunda tetiklenir.',
+                'fields' => [
+                    [
+                        'key' => 'model',
+                        'label' => 'Model Seçiniz',
+                        'type' => 'select',
+                        'options' => oo_wa_automation_get_eligible_models(),
+                        'hint' => 'Bu otomasyonun dinleyeceği model sınıfını seçiniz.',
+                    ],
+                ],
+                'icon' => 'plus-circle',
+                'category' => 'Kayıt Olayları',
+            ]
+        );
+
+
         // RECORD UPDATED TRIGGER
         TriggerRegistry::register(
             key: 'model_changes',

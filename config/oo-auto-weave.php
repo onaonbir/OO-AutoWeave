@@ -24,8 +24,6 @@ return [
         'action' => \OnaOnbir\OOAutoWeave\Models\Action::class,
     ],
     'event_listeners' => [
-        \OnaOnbir\OOAutoWeave\Events\TriggerMatchedEvent::class => [
 
-        ],
     ],
 ];

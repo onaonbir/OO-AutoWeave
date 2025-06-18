@@ -26,6 +26,8 @@ class DispatchTriggerForCreatedModel implements ShouldQueue
         $this->modelClass = $modelClass;
         $this->modelId = $modelId;
         $this->attributes = $attributes;
+
+        $this->onQueue(config('oo-auto-weave.queue.automation',"default"));
     }
 
     public function handle(): void

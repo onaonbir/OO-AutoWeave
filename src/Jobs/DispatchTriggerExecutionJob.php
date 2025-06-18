@@ -22,6 +22,8 @@ class DispatchTriggerExecutionJob implements ShouldQueue
     {
         $this->trigger = $trigger;
         $this->context = $context;
+
+        $this->onQueue(config('oo-auto-weave.queue.automation',"default"));
     }
 
     public function handle(): void

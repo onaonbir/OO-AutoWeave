@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use OnaOnbir\OOWeaveReplace\Filterable\Contracts\FilterableColumnsProviderInterface;
 
 if (! function_exists('hexToRgba')) {
 
@@ -19,28 +21,26 @@ if (! function_exists('oo_wa_automation_get_eligible_models')) {
     function oo_wa_automation_get_eligible_models(): array
     {
         $modelsPath = app_path('Models');
-
         $modelsNamespace = 'App\\Models\\';
-
-        $files = \Illuminate\Support\Facades\File::allFiles($modelsPath);
+        $files = File::allFiles($modelsPath);
 
         $eligibleModels = [];
 
         foreach ($files as $file) {
-            $contents = $file->getContents();
-            if (Str::contains($contents, 'use HasAutomation')) {
-                $className = $modelsNamespace.str_replace(
-                    ['/', '.php'],
-                    ['\\', ''],
-                    $file->getRelativePathname()
-                );
-                if (class_exists($className)) {
-                    $eligibleModels[] = [
-                        'label' => class_basename($className),
-                        'value' => $className,
-                    ];
-                }
+            $className = $modelsNamespace . str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+
+            if (! class_exists($className)) {
+                continue;
             }
+
+            if (! is_subclass_of($className, FilterableColumnsProviderInterface::class)) {
+                continue;
+            }
+
+            $eligibleModels[] = [
+                'label' => class_basename($className),
+                'value' => $className,
+            ];
         }
 
         return $eligibleModels;

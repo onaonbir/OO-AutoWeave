@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 use OnaOnbir\OOWeaveReplace\Filterable\Contracts\FilterableColumnsProviderInterface;
 
 if (! function_exists('hexToRgba')) {
@@ -27,7 +26,7 @@ if (! function_exists('oo_wa_automation_get_eligible_models')) {
         $eligibleModels = [];
 
         foreach ($files as $file) {
-            $className = $modelsNamespace . str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+            $className = $modelsNamespace.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
 
             if (! class_exists($className)) {
                 continue;

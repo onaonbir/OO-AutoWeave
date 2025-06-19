@@ -104,6 +104,17 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             }
         });
 
+        FunctionRegistry::register('pipe', function ($value, $options) {
+            $functions = $options['functions'] ?? [];
+            $result = $value;
+
+            foreach ($functions as $func) {
+                $result = FunctionRegistry::call($func, $result, $options);
+            }
+
+            return $result;
+        });
+
         // STRING FUNCTIONS
         FunctionRegistry::register('upper', fn ($value) => strtoupper($value));
         FunctionRegistry::register('lower', fn ($value) => strtolower($value));

@@ -16,7 +16,7 @@ class DynamicReplacer
             }, $template);
         }
 
-        if (!is_string($template)) {
+        if (! is_string($template)) {
             return $template;
         }
 
@@ -26,9 +26,9 @@ class DynamicReplacer
         $varExactRegex = self::buildVariableExactRegex($placeholders['variable']);
 
         // Template'in tamamı bir function call'u mu kontrol et
-        $funcRegexFull = '/^' . preg_quote($placeholders['function']['start'], '/') .
-            '(\w+)\((.*?)(?:,\s*(\{.*\}))?\)' .
-            preg_quote($placeholders['function']['end'], '/') . '$/';
+        $funcRegexFull = '/^'.preg_quote($placeholders['function']['start'], '/').
+            '(\w+)\((.*?)(?:,\s*(\{.*\}))?\)'.
+            preg_quote($placeholders['function']['end'], '/').'$/';
 
         if (preg_match($funcRegexFull, $template, $fullMatch)) {
             return self::executeFunction($fullMatch, $context);
@@ -39,6 +39,7 @@ class DynamicReplacer
             $lastTemplate = $template;
             $template = preg_replace_callback($funcRegex, function ($matches) use ($context) {
                 $result = self::executeFunction($matches, $context);
+
                 // String context içinde array'i JSON olarak encode et
                 return is_array($result) ? json_encode($result, JSON_UNESCAPED_UNICODE) : $result;
             }, $template);
@@ -50,6 +51,7 @@ class DynamicReplacer
 
         $template = preg_replace_callback($varRegex, function ($matches) use ($context) {
             $resolved = self::resolveRaw(trim($matches[1]), $context);
+
             return is_array($resolved) ? json_encode($resolved, JSON_UNESCAPED_UNICODE) : $resolved;
         }, $template);
 
@@ -75,6 +77,7 @@ class DynamicReplacer
     {
         $start = preg_quote($config['start'], '/');
         $end = preg_quote($config['end'], '/');
+
         return "/{$start}(\w+)\((.*?)(?:,\s*(\{.*\}))?\){$end}/";
     }
 
@@ -82,6 +85,7 @@ class DynamicReplacer
     {
         $start = preg_quote($config['start'], '/');
         $end = preg_quote($config['end'], '/');
+
         return "/{$start}(.*?){$end}/";
     }
 
@@ -89,6 +93,7 @@ class DynamicReplacer
     {
         $start = preg_quote($config['start'], '/');
         $end = preg_quote($config['end'], '/');
+
         return "/^{$start}(.*?){$end}$/";
     }
 
@@ -110,8 +115,8 @@ class DynamicReplacer
      * Bu fonksiyon, verilen wildcardPath'e uyan tüm düzleştirilmiş anahtarları toplar
      * ve bunları, wildcard'ın bittiği yerdeki alt dizileri veya değerleri içerecek şekilde yeniden yapılandırır.
      *
-     * @param string $wildcardPath Örneğin: 'r_causer.r_managers.*.additional_emails' veya 'r_users.*.name'
-     * @param array $context Düzleştirilmiş bağlam verisi
+     * @param  string  $wildcardPath  Örneğin: 'r_causer.r_managers.*.additional_emails' veya 'r_users.*.name'
+     * @param  array  $context  Düzleştirilmiş bağlam verisi
      * @return array Çözümlenmiş değerlerin bir dizisi
      */
     protected static function resolveWildcardGroup(string $wildcardPath, array $context): array
@@ -121,7 +126,7 @@ class DynamicReplacer
         // wildcardPath'in son parçası (örn: 'additional_emails' veya 'name')
         $targetProperty = null;
         $pathParts = explode('.', $wildcardPath);
-        if (!empty($pathParts)) {
+        if (! empty($pathParts)) {
             $targetProperty = array_pop($pathParts);
         }
 
@@ -134,7 +139,7 @@ class DynamicReplacer
         // pattern: /^r_causer\.r_managers\.(\d+)\.(additional_emails(?:\.(.*))?)?$/
         // Burada (\d+) kısmı *'ı yakalayacak.
         // (?:\.(.*))? ise baseWildcardPath'ten sonra gelen her şeyi yakalayacak.
-        $regexBasePattern = '/^' . str_replace('\*', '(\d+)', preg_quote($baseWildcardPath, '/')) . '\.(.*)$/';
+        $regexBasePattern = '/^'.str_replace('\*', '(\d+)', preg_quote($baseWildcardPath, '/')).'\.(.*)$/';
 
         $groupedMatches = [];
 
@@ -155,7 +160,7 @@ class DynamicReplacer
                 // Örnek: 'additional_emails.0.name'
                 $remainingFlatKey = $matches[count($matches) - 1]; // Son yakalama grubu
 
-                if (!isset($groupedMatches[$groupKey])) {
+                if (! isset($groupedMatches[$groupKey])) {
                     $groupedMatches[$groupKey] = [];
                 }
                 $groupedMatches[$groupKey][$remainingFlatKey] = $value;
@@ -166,11 +171,11 @@ class DynamicReplacer
             $undottedGroupData = Arr::undot($groupData);
 
             // Eğer hedefimiz doğrudan bir properti ise (örn: 'name' için {{r_users.*.name}})
-            if ($targetProperty && !str_contains($wildcardPath, $targetProperty . '.*')) {
+            if ($targetProperty && ! str_contains($wildcardPath, $targetProperty.'.*')) {
                 // Eğer undottedGroupData içinde direkt targetProperty varsa ve değeri bir dizi değilse
-                if (isset($undottedGroupData[$targetProperty]) && !is_array($undottedGroupData[$targetProperty])) {
+                if (isset($undottedGroupData[$targetProperty]) && ! is_array($undottedGroupData[$targetProperty])) {
                     $resolvedValues[] = $undottedGroupData[$targetProperty];
-                } else if (isset($undottedGroupData[$targetProperty]) && is_array($undottedGroupData[$targetProperty])) {
+                } elseif (isset($undottedGroupData[$targetProperty]) && is_array($undottedGroupData[$targetProperty])) {
                     // Eğer hedef properti bir dizi ise (additional_emails gibi), o diziyi al.
                     // Bu durumda undottedGroupData içinde additional_emails'ın kendisi de bir dizi olacaktır.
                     // Ve bazen bu dizinin içinde 0, 1 gibi anahtarlar olabilir.
@@ -202,13 +207,14 @@ class DynamicReplacer
 
         $flattened = [];
         foreach ($resolvedValues as $value) {
-            if (is_array($value) && !empty($value) && is_array(reset($value))) {
+            if (is_array($value) && ! empty($value) && is_array(reset($value))) {
                 // Eğer içiçe array ise flatten et
                 $flattened = array_merge($flattened, $value);
             } else {
                 $flattened[] = $value;
             }
         }
+
         return $flattened;
     }
 

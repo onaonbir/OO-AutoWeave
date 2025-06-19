@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use OnaOnbir\OOAutoWeave\Core\Console\Commands\RunScheduledTriggers;
 use OnaOnbir\OOAutoWeave\Core\DTO\TriggerHandlerResult;
 use OnaOnbir\OOAutoWeave\Core\Registry\ActionRegistry;
@@ -16,7 +17,6 @@ use OnaOnbir\OOAutoWeave\Core\Registry\TriggerRegistry;
 use OnaOnbir\OOAutoWeave\Core\Support\Logger;
 use OnaOnbir\OOAutoWeave\Jobs\DispatchTriggerExecutionJob;
 use OnaOnbir\OOAutoWeave\Models\Trigger;
-use Illuminate\Support\Str;
 
 class OOAutoWeaveServiceProvider extends ServiceProvider
 {
@@ -24,7 +24,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->packageBooted();
     }
@@ -32,17 +32,17 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/' . $this->packageName . '.php',
+            __DIR__.'/../config/'.$this->packageName.'.php',
             $this->packageName
         );
 
         $this->publishes([
-            __DIR__ . '/../database/migrations' => database_path('migrations'),
-        ], $this->packageName . '-migrations');
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], $this->packageName.'-migrations');
 
         $this->publishes([
-            __DIR__ . '/../config/' . $this->packageName . '.php' => config_path($this->packageName . '.php'),
-        ], $this->packageName . '-config');
+            __DIR__.'/../config/'.$this->packageName.'.php' => config_path($this->packageName.'.php'),
+        ], $this->packageName.'-config');
 
         $this->commands([
             //
@@ -71,25 +71,23 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
     private function registerFunctionRegisters(): void
     {
 
-
-
-
-        FunctionRegistry::register('json_encode', fn($value, $options) => json_encode($value));
+        FunctionRegistry::register('json_encode', fn ($value, $options) => json_encode($value));
 
         FunctionRegistry::register('implode', function ($value, $options) {
-            return is_array($value) ? implode($options['separator'] ?? ',', $value) : (string)$value;
+            return is_array($value) ? implode($options['separator'] ?? ',', $value) : (string) $value;
         });
 
-        FunctionRegistry::register('custom_function', fn($value, $options) => '❗️TODO: örnek');
+        FunctionRegistry::register('custom_function', fn ($value, $options) => '❗️TODO: örnek');
 
         // STRING FUNCTIONS
-        FunctionRegistry::register('upper', fn($value) => strtoupper($value));
-        FunctionRegistry::register('lower', fn($value) => strtolower($value));
-        FunctionRegistry::register('title', fn($value) => ucwords($value));
-        FunctionRegistry::register('trim', fn($value) => trim($value));
+        FunctionRegistry::register('upper', fn ($value) => strtoupper($value));
+        FunctionRegistry::register('lower', fn ($value) => strtolower($value));
+        FunctionRegistry::register('title', fn ($value) => ucwords($value));
+        FunctionRegistry::register('trim', fn ($value) => trim($value));
         FunctionRegistry::register('substr', function ($value, $options) {
             $start = $options['start'] ?? 0;
             $length = $options['length'] ?? null;
+
             return substr($value, $start, $length);
         });
         FunctionRegistry::register('replace', function ($value, $options) {
@@ -99,20 +97,25 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             return Str::slug($value); // Laravel Str helper
         });
 
-// ARRAY FUNCTIONS
-        FunctionRegistry::register('count', fn($value) => is_array($value) ? count($value) : 1);
-        FunctionRegistry::register('first', fn($value) => is_array($value) ? reset($value) : $value);
-        FunctionRegistry::register('last', fn($value) => is_array($value) ? end($value) : $value);
-        FunctionRegistry::register('unique', fn($value) => is_array($value) ? array_unique($value) : [$value]);
+        // ARRAY FUNCTIONS
+        FunctionRegistry::register('count', fn ($value) => is_array($value) ? count($value) : 1);
+        FunctionRegistry::register('first', fn ($value) => is_array($value) ? reset($value) : $value);
+        FunctionRegistry::register('last', fn ($value) => is_array($value) ? end($value) : $value);
+        FunctionRegistry::register('unique', fn ($value) => is_array($value) ? array_unique($value) : [$value]);
         FunctionRegistry::register('sort', function ($value, $options) {
-            if (!is_array($value)) return [$value];
+            if (! is_array($value)) {
+                return [$value];
+            }
             $sorted = $value;
             $direction = $options['direction'] ?? 'asc';
             $direction === 'desc' ? rsort($sorted) : sort($sorted);
+
             return $sorted;
         });
         FunctionRegistry::register('filter', function ($value, $options) {
-            if (!is_array($value)) return [];
+            if (! is_array($value)) {
+                return [];
+            }
             $key = $options['key'] ?? null;
             $operator = $options['operator'] ?? '=';
             $filterValue = $options['value'] ?? null;
@@ -125,24 +128,30 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
                     '!=' => $itemValue != $filterValue,
                     '>' => $itemValue > $filterValue,
                     '<' => $itemValue < $filterValue,
-                    'in' => in_array($itemValue, (array)$filterValue),
+                    'in' => in_array($itemValue, (array) $filterValue),
                     'contains' => str_contains($itemValue, $filterValue),
                     default => true
                 };
             });
         });
         FunctionRegistry::register('pluck', function ($value, $options) {
-            if (!is_array($value)) return [];
+            if (! is_array($value)) {
+                return [];
+            }
             $key = $options['key'] ?? 'name';
+
             return array_column($value, $key);
         });
         FunctionRegistry::register('chunk', function ($value, $options) {
-            if (!is_array($value)) return [$value];
+            if (! is_array($value)) {
+                return [$value];
+            }
             $size = $options['size'] ?? 2;
+
             return array_chunk($value, $size);
         });
 
-// DATE FUNCTIONS
+        // DATE FUNCTIONS
         FunctionRegistry::register('date_format', function ($value, $options) {
             $format = $options['format'] ?? 'Y-m-d';
             try {
@@ -167,39 +176,44 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             }
         });
 
-// MATHEMATICAL FUNCTIONS
-        FunctionRegistry::register('sum', fn($value) => is_array($value) ? array_sum($value) : (float)$value);
-        FunctionRegistry::register('avg', fn($value) => is_array($value) ? array_sum($value) / count($value) : (float)$value);
-        FunctionRegistry::register('min', fn($value) => is_array($value) ? min($value) : $value);
-        FunctionRegistry::register('max', fn($value) => is_array($value) ? max($value) : $value);
+        // MATHEMATICAL FUNCTIONS
+        FunctionRegistry::register('sum', fn ($value) => is_array($value) ? array_sum($value) : (float) $value);
+        FunctionRegistry::register('avg', fn ($value) => is_array($value) ? array_sum($value) / count($value) : (float) $value);
+        FunctionRegistry::register('min', fn ($value) => is_array($value) ? min($value) : $value);
+        FunctionRegistry::register('max', fn ($value) => is_array($value) ? max($value) : $value);
         FunctionRegistry::register('round', function ($value, $options) {
             $precision = $options['precision'] ?? 0;
-            return round((float)$value, $precision);
+
+            return round((float) $value, $precision);
         });
 
-// FORMATTING FUNCTIONS
+        // FORMATTING FUNCTIONS
         FunctionRegistry::register('number_format', function ($value, $options) {
             $decimals = $options['decimals'] ?? 0;
             $decimal_sep = $options['decimal_separator'] ?? ',';
             $thousands_sep = $options['thousands_separator'] ?? '.';
-            return number_format((float)$value, $decimals, $decimal_sep, $thousands_sep);
+
+            return number_format((float) $value, $decimals, $decimal_sep, $thousands_sep);
         });
         FunctionRegistry::register('currency', function ($value, $options) {
             $currency = $options['currency'] ?? '₺';
             $position = $options['position'] ?? 'after'; // before, after
-            $formatted = number_format((float)$value, 2, ',', '.');
-            return $position === 'before' ? $currency . $formatted : $formatted . ' ' . $currency;
+            $formatted = number_format((float) $value, 2, ',', '.');
+
+            return $position === 'before' ? $currency.$formatted : $formatted.' '.$currency;
         });
         FunctionRegistry::register('percentage', function ($value, $options) {
             $total = $options['total'] ?? 100;
             $precision = $options['precision'] ?? 1;
-            $percentage = ((float)$value / (float)$total) * 100;
-            return round($percentage, $precision) . '%';
+            $percentage = ((float) $value / (float) $total) * 100;
+
+            return round($percentage, $precision).'%';
         });
 
-// CONDITIONAL FUNCTIONS
+        // CONDITIONAL FUNCTIONS
         FunctionRegistry::register('default', function ($value, $options) {
             $default = $options['default'] ?? '';
+
             return empty($value) ? $default : $value;
         });
         FunctionRegistry::register('conditional', function ($value, $options) {
@@ -208,70 +222,76 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             $false_value = $options['false'] ?? '';
 
             $result = match ($condition) {
-                'not_empty' => !empty($value),
+                'not_empty' => ! empty($value),
                 'empty' => empty($value),
                 'equals' => $value == ($options['equals'] ?? null),
-                'greater_than' => (float)$value > (float)($options['than'] ?? 0),
-                'less_than' => (float)$value < (float)($options['than'] ?? 0),
-                default => !empty($value)
+                'greater_than' => (float) $value > (float) ($options['than'] ?? 0),
+                'less_than' => (float) $value < (float) ($options['than'] ?? 0),
+                default => ! empty($value)
             };
 
             return $result ? $true_value : $false_value;
         });
 
-// EMAIL & CONTACT FUNCTIONS
+        // EMAIL & CONTACT FUNCTIONS
         FunctionRegistry::register('email_domain', function ($value) {
             if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                return substr(strrchr($value, "@"), 1);
+                return substr(strrchr($value, '@'), 1);
             }
+
             return '';
         });
         FunctionRegistry::register('phone_format', function ($value, $options) {
             $format = $options['format'] ?? 'international'; // national, international
             // Telefon formatlama logic'i burada
             $cleaned = preg_replace('/[^0-9]/', '', $value);
-            if ($format === 'international' && !str_starts_with($cleaned, '90')) {
-                $cleaned = '90' . $cleaned;
+            if ($format === 'international' && ! str_starts_with($cleaned, '90')) {
+                $cleaned = '90'.$cleaned;
             }
-            return '+' . $cleaned;
+
+            return '+'.$cleaned;
         });
 
-// HTML & MARKUP FUNCTIONS
-        FunctionRegistry::register('escape', fn($value) => htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
-        FunctionRegistry::register('strip_tags', fn($value) => strip_tags($value));
-        FunctionRegistry::register('nl2br', fn($value) => nl2br($value));
+        // HTML & MARKUP FUNCTIONS
+        FunctionRegistry::register('escape', fn ($value) => htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+        FunctionRegistry::register('strip_tags', fn ($value) => strip_tags($value));
+        FunctionRegistry::register('nl2br', fn ($value) => nl2br($value));
         FunctionRegistry::register('markdown', function ($value) {
             // Markdown parser kullanabilirsiniz
             return Str::markdown($value); // Laravel 9+
         });
 
-// FILE & URL FUNCTIONS
+        // FILE & URL FUNCTIONS
         FunctionRegistry::register('file_size', function ($value, $options) {
             $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-            $bytes = (int)$value;
+            $bytes = (int) $value;
             $i = 0;
             while ($bytes > 1024 && $i < count($units) - 1) {
                 $bytes /= 1024;
                 $i++;
             }
-            return round($bytes, 2) . ' ' . $units[$i];
-        });
-        FunctionRegistry::register('url_encode', fn($value) => urlencode($value));
-        FunctionRegistry::register('base64_encode', fn($value) => base64_encode($value));
 
-// LOCALIZATION FUNCTIONS
+            return round($bytes, 2).' '.$units[$i];
+        });
+        FunctionRegistry::register('url_encode', fn ($value) => urlencode($value));
+        FunctionRegistry::register('base64_encode', fn ($value) => base64_encode($value));
+
+        // LOCALIZATION FUNCTIONS
         FunctionRegistry::register('trans', function ($value, $options) {
             $locale = $options['locale'] ?? app()->getLocale();
+
             return __($value, [], $locale);
         });
         FunctionRegistry::register('pluralize', function ($value, $options) {
             $count = $options['count'] ?? 1;
+
             return Str::plural($value, $count);
         });
 
-// ADVANCED FUNCTIONS
+        // ADVANCED FUNCTIONS
         FunctionRegistry::register('template', function ($value, $options) {
             $template = $options['template'] ?? '{value}';
+
             return str_replace('{value}', $value, $template);
         });
         FunctionRegistry::register('pipe', function ($value, $options) {
@@ -280,29 +300,33 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             foreach ($functions as $func) {
                 $result = FunctionRegistry::call($func, $result, $options);
             }
+
             return $result;
         });
 
-// TÜRKÇE ÖZELLEŞTİRMELER
+        // TÜRKÇE ÖZELLEŞTİRMELER
         FunctionRegistry::register('turkish_upper', function ($value) {
             $search = ['ç', 'ğ', 'ı', 'ö', 'ş', 'ü'];
             $replace = ['Ç', 'Ğ', 'I', 'Ö', 'Ş', 'Ü'];
+
             return str_replace($search, $replace, strtoupper($value));
         });
         FunctionRegistry::register('turkish_slug', function ($value) {
             $search = ['ç', 'ğ', 'ı', 'ö', 'ş', 'ü', 'Ç', 'Ğ', 'I', 'Ö', 'Ş', 'Ü'];
             $replace = ['c', 'g', 'i', 'o', 's', 'u', 'c', 'g', 'i', 'o', 's', 'u'];
+
             return Str::slug(str_replace($search, $replace, $value));
         });
 
-// DEBUG FUNCTIONS
+        // DEBUG FUNCTIONS
         FunctionRegistry::register('debug', function ($value, $options) {
             $format = $options['format'] ?? 'json';
+
             return match ($format) {
                 'json' => json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
                 'var_dump' => print_r($value, true),
                 'type' => gettype($value),
-                default => (string)$value
+                default => (string) $value
             };
         });
 
@@ -351,7 +375,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
                     'model' => $model ? get_class($model) : 'null',
                 ], $source);
 
-                if (!$model) {
+                if (! $model) {
                     Logger::warning('Model not found in context — trigger denied', [
                         'trigger_id' => $trigger->id,
                     ], $source);
@@ -411,7 +435,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
                     'model' => $model ? get_class($model) : 'null',
                 ], $source);
 
-                if (!$model) {
+                if (! $model) {
                     Logger::info('No model found in context — trigger denied', [
                         'trigger_id' => $trigger->id,
                     ], $source);
@@ -427,7 +451,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
                     'expected_field' => $field,
                 ], $source);
 
-                if ($field && !array_key_exists($field, $changed)) {
+                if ($field && ! array_key_exists($field, $changed)) {
                     Logger::info('Watched field not changed — trigger denied', [
                         'field' => $field,
                     ], $source);
@@ -487,7 +511,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
                 // ID kontrolü için (model_id zorunlu olarak geliyor)
                 $modelId = $context['model_id'] ?? null;
 
-                if (!$modelClass || empty($deletedAttributes)) {
+                if (! $modelClass || empty($deletedAttributes)) {
                     Logger::info('Eksik model veya attribute bilgisi — trigger denied', [], $source);
 
                     return TriggerHandlerResult::deny();
@@ -616,7 +640,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             key: 'manual',
             group: 'custom',
             type: 'manual',
-            handler: fn(Trigger $trigger, array $context = []) => TriggerHandlerResult::allow($trigger, $context),
+            handler: fn (Trigger $trigger, array $context = []) => TriggerHandlerResult::allow($trigger, $context),
             options: [
                 'label' => 'Elle Tetikleme',
                 'description' => 'Elle tetiklenebilen otomasyon.',
@@ -697,7 +721,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
     protected function registerEventTriggerListeners(): void
     {
-        if (!app()->runningInConsole() || !Schema::hasTable('oo_wa_triggers')) {
+        if (! app()->runningInConsole() || ! Schema::hasTable('oo_wa_triggers')) {
             return;
         }
 
@@ -710,14 +734,14 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             ->each(function (Trigger $trigger) {
                 $eventClass = $trigger->settings['event'] ?? null;
 
-                if (!$eventClass || !class_exists($eventClass)) {
+                if (! $eventClass || ! class_exists($eventClass)) {
                     return;
                 }
 
                 Event::listen($eventClass, function ($event) use ($trigger) {
                     DispatchTriggerExecutionJob::dispatch($trigger, [
                         'source' => 'event.dynamic',
-                        'attributes' => method_exists($event, 'toArray') ? $event->toArray() : (array)$event,
+                        'attributes' => method_exists($event, 'toArray') ? $event->toArray() : (array) $event,
                     ]);
                 });
             });
@@ -725,7 +749,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
     protected function registerJobEventListeners(): void
     {
-        if (!app()->runningInConsole() || !Schema::hasTable('oo_wa_triggers')) {
+        if (! app()->runningInConsole() || ! Schema::hasTable('oo_wa_triggers')) {
             return;
         }
 
@@ -765,9 +789,9 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
     protected function registerConfiguredEventListeners(): void
     {
-        $listeners = config($this->packageName . '.event_listeners', []);
+        $listeners = config($this->packageName.'.event_listeners', []);
         foreach ($listeners as $event => $handlers) {
-            foreach ((array)$handlers as $handler) {
+            foreach ((array) $handlers as $handler) {
                 Event::listen($event, $handler);
             }
         }

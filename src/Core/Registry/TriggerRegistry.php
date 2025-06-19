@@ -50,12 +50,23 @@ class TriggerRegistry
 
     public static function get(string $key, string $group, string $type): ?Closure
     {
-        return static::$map[static::buildKey($key, $group, $type)]['handler'] ?? null;
+        return static::$map[static::buildKey($key, $group, $type)] ?? null;
     }
 
     public static function getDefinition(string $key, string $group, string $type): ?array
     {
         return static::$map[static::buildKey($key, $group, $type)] ?? null;
+    }
+
+    public static function getSafeDefinition(string $key, string $group, string $type): ?array
+    {
+        $definition = static::$map[static::buildKey($key, $group, $type)] ?? null;
+
+        if ($definition) {
+            unset($definition['handler']);
+        }
+
+        return $definition;
     }
 
     public static function getOption(string $key, string $group, string $type, string $optionKey, mixed $default = null): mixed
@@ -66,6 +77,11 @@ class TriggerRegistry
     public static function getType(string $key, string $group, string $type): ?string
     {
         return static::$map[static::buildKey($key, $group, $type)]['type'] ?? null;
+    }
+
+    public static function getHandler(string $key, string $group, string $type): ?Closure
+    {
+        return static::$map[static::buildKey($key, $group, $type)]['handler'] ?? null;
     }
 
     public static function all(): array

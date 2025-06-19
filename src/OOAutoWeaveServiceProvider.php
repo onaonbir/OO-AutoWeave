@@ -2,13 +2,10 @@
 
 namespace OnaOnbir\OOAutoWeave;
 
-use Exception;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use OnaOnbir\OOAutoWeave\Core\Console\Commands\RunScheduledTriggers;
 use OnaOnbir\OOAutoWeave\Core\DTO\TriggerHandlerResult;
 use OnaOnbir\OOAutoWeave\Core\Registry\ActionRegistry;
@@ -63,10 +60,6 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         $this->registerEventTriggerListeners();
 
     }
-
-
-
-
 
     private function registerDefaultActions(): void
     {

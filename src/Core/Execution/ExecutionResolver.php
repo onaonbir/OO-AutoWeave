@@ -2,8 +2,7 @@
 
 namespace OnaOnbir\OOAutoWeave\Core\Execution;
 
-use OnaOnbir\OOAutoWeave\Core\Data\ContextExtractor;
-use OnaOnbir\OOAutoWeave\Core\Data\DynamicReplacer;
+
 use OnaOnbir\OOAutoWeave\Core\Data\RuleMatcher;
 use OnaOnbir\OOAutoWeave\Core\Registry\ActionRegistry;
 use OnaOnbir\OOAutoWeave\Core\Support\Logger;
@@ -11,6 +10,7 @@ use OnaOnbir\OOAutoWeave\Enums\ExecutionTypeEnum;
 use OnaOnbir\OOAutoWeave\Models\Action;
 use OnaOnbir\OOAutoWeave\Models\ActionSet;
 use OnaOnbir\OOAutoWeave\Models\Trigger;
+use OnaOnbir\OOWeaveReplace\Core\DataProcessor;
 
 class ExecutionResolver
 {
@@ -44,7 +44,7 @@ class ExecutionResolver
         $attributes = $context['attributes'] ?? [];
 
         $contextData = $model
-            ? ContextExtractor::extract($model, method_exists($model, 'filterableColumns') ? $model::filterableColumns(1) : [])
+            ? DataProcessor::extractContext($model, method_exists($model, 'filterableColumns') ? $model::filterableColumns(1) : [])
             : $attributes;
 
         if ($set->execution_type === ExecutionTypeEnum::RULED->value) {
@@ -77,7 +77,7 @@ class ExecutionResolver
         ], $source);
 
         try {
-            $finalParams = DynamicReplacer::replace($parameters, $context);
+            $finalParams = DataProcessor::replace($parameters, $context);
 
             Logger::info('Final action parameters after replacement', [
                 'parameters' => $finalParams,

@@ -53,6 +53,11 @@ class TriggerRegistry
         return static::$map[static::buildKey($key, $group, $type)]['handler'] ?? null;
     }
 
+    public static function getDefinition(string $key, string $group, string $type): ?array
+    {
+        return static::$map[static::buildKey($key, $group, $type)] ?? null;
+    }
+
     public static function getOption(string $key, string $group, string $type, string $optionKey, mixed $default = null): mixed
     {
         return static::$map[static::buildKey($key, $group, $type)]['options'][$optionKey] ?? $default;

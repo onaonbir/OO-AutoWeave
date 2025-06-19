@@ -79,6 +79,31 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
         FunctionRegistry::register('custom_function', fn ($value, $options) => '❗️TODO: örnek');
 
+        FunctionRegistry::register('is_empty', fn($value) => empty($value));
+        FunctionRegistry::register('is_numeric', fn($value) => is_numeric($value));
+        FunctionRegistry::register('is_array', fn($value) => is_array($value));
+
+        //HASH
+        FunctionRegistry::register('md5', fn($value) => md5($value));
+        FunctionRegistry::register('sha1', fn($value) => sha1($value));
+
+        FunctionRegistry::register('uuid', fn() => (string) \Illuminate\Support\Str::uuid());
+        FunctionRegistry::register('ulid', fn() => (string) \Illuminate\Support\Str::ulid());
+
+        FunctionRegistry::register('starts_with', fn($value, $options) => str_starts_with($value, $options['needle'] ?? ''));
+        FunctionRegistry::register('ends_with', fn($value, $options) => str_ends_with($value, $options['needle'] ?? ''));
+        FunctionRegistry::register('contains', fn($value, $options) => str_contains($value, $options['needle'] ?? ''));
+
+        FunctionRegistry::register('try', function ($value, $options) {
+            $callback = $options['callback'] ?? null;
+
+            try {
+                return is_callable($callback) ? $callback($value) : $value;
+            } catch (\Throwable $e) {
+                return $options['catch'] ?? 'error';
+            }
+        });
+
         // STRING FUNCTIONS
         FunctionRegistry::register('upper', fn ($value) => strtoupper($value));
         FunctionRegistry::register('lower', fn ($value) => strtolower($value));
@@ -95,6 +120,10 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         });
         FunctionRegistry::register('slug', function ($value) {
             return Str::slug($value); // Laravel Str helper
+        });
+        FunctionRegistry::register('limit', function ($value, $options) {
+            $limit = $options['limit'] ?? 10;
+            return substr($value, 0, $limit);
         });
 
         // ARRAY FUNCTIONS
@@ -149,6 +178,24 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             $size = $options['size'] ?? 2;
 
             return array_chunk($value, $size);
+        });
+        FunctionRegistry::register('array_map', function ($value, $options = []) {
+            if (!is_array($value)) return $value;
+
+            $callback = $options['callback'] ?? null;
+
+            // Fonksiyon adı string olarak geçilmişse, çağrılabilir mi kontrol et
+            if (is_string($callback) && function_exists($callback)) {
+                return array_map($callback, $value);
+            }
+
+            // Closure ise direkt kullan
+            if (is_callable($callback)) {
+                return array_map($callback, $value);
+            }
+
+            // Callback geçerli değilse orijinal veriyi döndür
+            return $value;
         });
 
         // DATE FUNCTIONS

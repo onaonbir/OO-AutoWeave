@@ -1,294 +1,379 @@
-## 🧠 Context Extractor & Rule Engine
+# DynamicReplacer - Usage Documentation
 
-### 🔍 Context Extractor Nedir?
+DynamicReplacer, template strings ve arrays üzerinde dinamik değişken değiştirme ve fonksiyon uygulama işlemlerini gerçekleştiren güçlü bir PHP sınıfıdır.
 
-`OOAutoWeave`, bir modelin içeriğini otomasyon sistemine aktarabilmek için özel bir **Context Extractor** altyapısı sağlar. Bu sistem, modelin direkt alanlarını, ilişkilerini ve JSON alanlarını **dot notation** formatında düzleştirerek tek bir `context` array’i haline getirir.
-
-#### Örnek Context:
+## Temel Kullanım
 
 ```php
-[
-    'status' => 'active',
-    'form_code' => 'F-12345',
-    'r_brand.name' => 'BMW',
-    'r_causer.r_managers.0.name' => 'Ahmet',
-    'r_causer.r_managers.1.name' => 'Ayşe',
-]
+use OnaOnbir\OOAutoWeave\Core\Data\DynamicReplacer;
+
+$context = [
+    'user.name' => 'John Doe',
+    'user.email' => 'john@example.com',
+    'products.0.name' => 'Laptop',
+    'products.0.price' => 1500,
+    'products.1.name' => 'Mouse',
+    'products.1.price' => 25
+];
+
+$template = 'Merhaba {{user.name}}, email adresiniz: {{user.email}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: "Merhaba John Doe, email adresiniz: john@example.com"
 ```
 
-### 🧾 Rule Set Sistemi
+## Yapılandırma
 
-ActionSet seviyesinde, bir dizi **kural** tanımlayarak tetiklenen işlemleri kontrol edebilirsiniz. Bu sayede yalnızca belirli koşullar sağlandığında action'lar çalıştırılır.
-
-#### Desteklenen Operatörler:
-
-* `=` eşittir
-* `!=` eşit değildir
-* `>` büyüktür
-* `>=` büyük eşittir
-* `<` küçüktür
-* `<=` küçük eşittir
-* `in` belirtilenlerden biri
-* `not in` belirtilenler dışında
-
-#### Örnek Kullanım:
+DynamicReplacer, placeholder'ları config dosyasından okur:
 
 ```php
-$rules = Rule::make()
-    ->and('status', '=', 'active')
-    ->and('r_brand.name', '=', 'BMW');
-
-$isMatched = $rules->evaluateAgainst($context);
+// config/oo-auto-weave.php
+return [
+    'placeholders' => [
+        'variable' => [
+            'start' => '{{',
+            'end' => '}}'
+        ],
+        'function' => [
+            'start' => '@@',
+            'end' => '@@'
+        ]
+    ]
+];
 ```
 
----
+## Değişken Değiştirme
 
-### 🔁 Placeholder (Değişken Yerine Koyma)
-
-Her action içerisinde dinamik alanlar `"{{...}}"` şeklinde yazılarak context'e göre doldurulur.
-
-#### Replace Örneği:
+### Basit Değişkenler
 
 ```php
-$replaced = DataProcessor::replace([
-    'form_code' => '{{form_code}}',
-    'marka' => '{{r_brand.name}}',
-    'gönderen yöneticiler' => '{{r_causer.r_managers.*.name}}',
+$context = ['name' => 'Ali', 'age' => 25];
+$template = 'İsim: {{name}}, Yaş: {{age}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: "İsim: Ali, Yaş: 25"
+```
+
+### Noktalı Notation
+
+```php
+$context = [
+    'user.profile.name' => 'Ayşe',
+    'user.profile.city' => 'İstanbul'
+];
+$template = '{{user.profile.name}} - {{user.profile.city}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: "Ayşe - İstanbul"
+```
+
+### Tek Değişken Template
+
+Template tamamen tek bir değişken ise, o değişkenin orijinal türü korunur:
+
+```php
+$context = ['users' => ['Ali', 'Veli', 'Deli']];
+$template = '{{users}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: ['Ali', 'Veli', 'Deli'] (array olarak)
+```
+
+## Wildcard Kullanımı
+
+### Basit Wildcard
+
+```php
+$context = [
+    'users.0.name' => 'Ali',
+    'users.1.name' => 'Veli',
+    'users.2.name' => 'Ahmet'
+];
+$template = '{{users.*.name}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: ['Ali', 'Veli', 'Ahmet']
+```
+
+### Çoklu Wildcard
+
+```php
+$context = [
+    'departments.0.users.0.name' => 'Ali',
+    'departments.0.users.1.name' => 'Veli',
+    'departments.1.users.0.name' => 'Ayşe',
+    'departments.1.users.1.name' => 'Fatma'
+];
+$template = '{{departments.*.users.*.name}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: ['Ali', 'Veli', 'Ayşe', 'Fatma']
+```
+
+### İç İçe Array Wildcard
+
+```php
+$context = [
+    'managers.0.additional_emails.0.name' => 'work@example.com',
+    'managers.0.additional_emails.1.name' => 'personal@example.com',
+    'managers.1.additional_emails.0.name' => 'admin@example.com'
+];
+$template = '{{managers.*.additional_emails.*.name}}';
+$result = DynamicReplacer::replace($template, $context);
+// Sonuç: ['work@example.com', 'personal@example.com', 'admin@example.com']
+```
+
+## Fonksiyon Kullanımı
+
+### Temel Fonksiyon Syntax
+
+```php
+$template = '@@function_name({{variable}})@@';
+$template = '@@function_name({{variable}}, {"option": "value"})@@';
+```
+
+### Fonksiyon Kaydetme
+
+```php
+use OnaOnbir\OOAutoWeave\Core\Registry\FunctionRegistry;
+
+// Basit fonksiyon
+FunctionRegistry::register('upper', function ($value, $options) {
+    return strtoupper($value);
+});
+
+// Opsiyonlu fonksiyon
+FunctionRegistry::register('limit', function ($value, $options) {
+    $limit = $options['limit'] ?? 10;
+    return substr($value, 0, $limit);
+});
+
+// Array fonksiyonu
+FunctionRegistry::register('sort', function ($value, $options) {
+    if (!is_array($value)) return [$value];
+    $sorted = $value;
+    $direction = $options['direction'] ?? 'asc';
+    $direction === 'desc' ? rsort($sorted) : sort($sorted);
+    return $sorted;
+});
+```
+
+### Fonksiyon Kullanım Örnekleri
+
+```php
+$context = [
+    'name' => 'john doe',
+    'description' => 'Bu çok uzun bir açıklama metnidir',
+    'numbers' => [5, 2, 8, 1, 9]
+];
+
+// String fonksiyonları
+$result = DynamicReplacer::replace('@@upper({{name}})@@', $context);
+// Sonuç: "JOHN DOE"
+
+$result = DynamicReplacer::replace('@@limit({{description}}, {"limit": 10})@@', $context);
+// Sonuç: "Bu çok uzu"
+
+// Array fonksiyonları
+$result = DynamicReplacer::replace('@@sort({{numbers}})@@', $context);
+// Sonuç: [1, 2, 5, 8, 9] (array olarak)
+
+$result = DynamicReplacer::replace('@@sort({{numbers}}, {"direction": "desc"})@@', $context);
+// Sonuç: [9, 8, 5, 2, 1] (array olarak)
+```
+
+## Önemli Davranış Farkları
+
+### Array Döndürme vs String Döndürme
+
+```php
+// Template tamamen fonksiyon ise → Array döndürür
+$result = DynamicReplacer::replace('@@sort({{numbers}})@@', $context);
+// Sonuç: [1, 2, 5, 8, 9] (array)
+
+// Template string içinde fonksiyon ise → JSON string döndürür
+$result = DynamicReplacer::replace('Sayılar: @@sort({{numbers}})@@', $context);
+// Sonuç: "Sayılar: [1,2,5,8,9]" (string)
+```
+
+### Tek Değişken vs Çoklu Değişken
+
+```php
+// Tek değişken → Orijinal tür korunur
+$result = DynamicReplacer::replace('{{users}}', $context);
+// Sonuç: ['Ali', 'Veli'] (array)
+
+// String içinde değişken → JSON string
+$result = DynamicReplacer::replace('Kullanıcılar: {{users}}', $context);
+// Sonuç: 'Kullanıcılar: ["Ali","Veli"]' (string)
+```
+
+## Recursive Fonksiyon Kullanımı
+
+DynamicReplacer, iç içe fonksiyon çağrılarını destekler:
+
+```php
+$context = [
+    'text' => 'merhaba dünya',
+    'numbers' => [3, 1, 4, 1, 5]
+];
+
+// İç içe fonksiyon çağrıları
+$result = DynamicReplacer::replace('@@upper(@@limit({{text}}, {"limit": 7}))@@', $context);
+// Sonuç: "MERHABA"
+
+// Fonksiyon içinde wildcard
+$context = [
+    'users.0.name' => 'ali veli',
+    'users.1.name' => 'ayşe fatma'
+];
+$result = DynamicReplacer::replace('@@upper(@@implode({{users.*.name}}, {"separator": " - "})@@)@@', $context);
+// Sonuç: "ALI VELI - AYŞE FATMA"
+```
+
+## Karmaşık Örnekler
+
+### E-posta Yönetimi
+
+```php
+$context = [
+    'r_causer.r_managers.0.additional_emails.0.name' => 'work@company.com',
+    'r_causer.r_managers.0.additional_emails.0.type' => 'work',
+    'r_causer.r_managers.0.additional_emails.1.name' => 'personal@gmail.com',
+    'r_causer.r_managers.0.additional_emails.1.type' => 'personal',
+    'r_causer.r_managers.1.additional_emails.0.name' => 'admin@company.com',
+    'r_causer.r_managers.1.additional_emails.0.type' => 'admin'
+];
+
+$templates = [
+    'work_emails' => '{{r_causer.r_managers.*.additional_emails.*.name}}',
+    'work_emails_full' => '{{r_causer.r_managers.*.additional_emails}}',
+    'flat_json' => '@@json_encode({{r_causer.r_managers.*.additional_emails}})@@',
+    'email_count' => '@@count({{r_causer.r_managers.*.additional_emails}})@@',
+    'sorted_emails' => '@@sort({{r_causer.r_managers.*.additional_emails}})@@'
+];
+
+$result = DynamicReplacer::replace($templates, $context);
+```
+
+### Kullanıcı Formatı
+
+```php
+$context = [
+    'user.name' => 'Mehmet Ali Özkan',
+    'user.email' => 'mehmet.ali@example.com'
+];
+
+// Slug oluşturma
+FunctionRegistry::register('slug', function ($value, $options) {
+    $slug = strtolower($value);
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+    return trim($slug, '-');
+});
+
+$result = DynamicReplacer::replace('@@slug({{user.name}})@@', $context);
+// Sonuç: "mehmet-ali-ozkan"
+```
+
+### Custom Fonksiyon ile Separator
+
+```php
+FunctionRegistry::register('custom_join', function ($value, $options) {
+    if (!is_array($value)) return $value;
+    $separator = $options['separator'] ?? ', ';
+    $result = [];
+    foreach ($value as $item) {
+        if (is_array($item) && isset($item['name'])) {
+            $result[] = $item['name'];
+        } else {
+            $result[] = $item;
+        }
+    }
+    return implode($separator, $result);
+});
+
+$result = DynamicReplacer::replace(
+    '@@custom_join({{users.*.name}}, {"separator": " | "})@@',
+    $context
+);
+```
+
+## Array İşleme
+
+### Array Map Fonksiyonu
+
+```php
+$context = [
+    'users.0.name' => 'ali',
+    'users.1.name' => 'veli',
+    'users.2.name' => 'deli'
+];
+
+$result = DynamicReplacer::replace([
+    'user_names' => '{{users.*.name}}',
+    'user_names_upper' => '@@array_map({{users.*.name}}, {"callback": "strtoupper"})'
 ], $context);
 ```
 
-**Not:** `*.name` gibi çoklu veri yapıları, otomatik olarak virgülle birleştirilir (`implode(', ', ...)`).
+## Hata Yönetimi
 
----
-
-### 🧪 Test Route Örneği
-
-Aşağıdaki route ile hem rule eşleşmesini hem de context mapping işlemini test edebilirsiniz:
+DynamicReplacer, eksik değişkenler için güvenli varsayılanlar sağlar:
 
 ```php
-    Route::get('context-extractor', function () {
-        $model = \App\Models\User::find(2);
-        $context = DataProcessor::extractContext($model, $model::filterableColumns(2));
-
-        $rules = Rule::make()
-            ->and('status', '=', 'active');
-
-        $isMatched = $rules->evaluateAgainst($model, $model::filterableColumns(2));
-
-        $replaced = DataProcessor::replace([
-            'form_code' => '{{form_code}}',
-            'marka' => '{{r_brand.name}}',
-            'gönderen yöneticiler' => '{{r_causer.r_managers.*.name}}',
-        ], $context);
-
-        $context = \Illuminate\Support\Arr::undot($context);
-
-        dd($isMatched, $context, $replaced);
-
-    });
-
-
-    Route::get('context-extractor-test', function () {
-
-        $context = [
-            'status' => 'active',
-            'form_code' => 'F-12345',
-            'r_brand.name' => 'BMW',
-            'r_causer.r_managers.0.name' => 'Ahmet',
-            'r_causer.r_managers.1.name' => 'Ayşe',
-        ];
-
-        // Rule test
-        $rules = Rule::make()
-            ->and('status', '=', 'active1')
-            ->and('r_brand.name', '=', 'BMW');
-        $isMatched = $rules->evaluateAgainst($context);
-
-        // Replace test
-        $replaced = DataProcessor::replace([
-            'form_code' => '{{form_code}}',
-            'marka' => '{{r_brand.name}}',
-            'gönderen yöneticiler' => '{{r_causer.r_managers.*.name}}',
-        ], $context);
-
-        $undotted = Arr::undot($context);
-
-        dd($isMatched, $undotted, $replaced);
-    });    
-    
-    
-    Route::get('context-extractor-test-with-functions', function () {
-
-       $context = [
-            'user_ids' => [
-                ['id' => 1],
-                ['id' => 2],
-            ],
-            'r_causer.r_managers.0.name' => 'Ahmet',
-            'r_causer.r_managers.1.name' => 'Ayşe',
-            'r_brand.name' => 'Ayşe',
-            'notification' => [
-                'title' => 'Yeni bir form geldi size :/',
-                'body' => 'Burası mesaj alanı önemli olan herşey burada gönderilicektir. Ama işte bi garip çalışıyor :/',
-            ]
-        ];
-
-        $replaced = DynamicReplacer::replace([
-            'user_ids' => '{{user_ids}}',
-            'user_ids_array' => '{{user_ids.*.id}}',
-            'user_ids_array_json' => '@@json_encode({{user_ids.*.id}})@@',
-            'title' => '{{notification.title}}',
-            'body' => '{{notification.body}}',
-            'body prefix' => '@@cusom_function(simple_text, {"prefix": "👤 "})@@',
-            'gönderen yöneticiler' => '{{r_causer.r_managers.*.name}}',
-            'gönderen yöneticiler implode' => '@@implode({{r_causer.r_managers.*.name}})@@',
-            'gönderen yöneticiler json' => '@@json_encode({{r_causer.r_managers.*.name}})@@',
-            'gönderen yöneticiler custom func' => '@@custom_function({{r_causer.r_managers.*.name}}, {"prefix": "👤 "})@@',
-            'marka' => '{{r_brand.name}}',
-        ], $context);
-
-        dd($context, $replaced);
-    });
+$context = ['name' => 'Ali'];
+$result = DynamicReplacer::replace('{{name}} - {{missing_var}}', $context);
+// Sonuç: "Ali - " (missing_var boş string olur)
 ```
 
----
+## Performans İpuçları
 
-### ✅ ActionSet Rule Kontrolü
+1. **Büyük veri setleri**: Wildcard kullanırken context'i mümkün olduğunca düz tutun
+2. **Recursive fonksiyonlar**: Çok derin iç içe fonksiyonlardan kaçının
+3. **Array fonksiyonları**: Büyük array'ler için memory kullanımına dikkat edin
 
-Aşağıdaki yapı, `status` alanı `active` ise `true_branch` action'larını, değilse `false_branch` action'larını çalıştırır:
+## Örnek Kullanım Senaryoları
+
+### 1. E-posta Template'i
 
 ```php
-'action_set' => [
-    'rules' => [
-        [
-            'columnKey' => 'status',
-            'operator' => '=',
-            'value' => 'active',
-            'type' => 'and',
-        ],
-    ],
-],
+$context = [
+    'user.name' => 'Ahmet',
+    'order.id' => 12345,
+    'order.items.0.name' => 'Laptop',
+    'order.items.1.name' => 'Mouse'
+];
+
+$emailTemplate = [
+    'subject' => 'Sipariş Onayı - #{{order.id}}',
+    'body' => 'Merhaba {{user.name}}, siparişiniz onaylandı. Ürünler: @@implode({{order.items.*.name}}, {"separator": ", "})@@'
+];
+
+$result = DynamicReplacer::replace($emailTemplate, $context);
 ```
 
-## 🧩 `FilterableColumnsProviderInterface` ve `HasFilterableColumns` Kullanımı
-
-### 🎯 Amaç
-
-`OOAutoWeave` sistemi içerisinde; trigger context’ini çıkarmak, rule değerlendirmesi yapmak ve dinamik parametreleri işlemek için **modelin alanlarını ve ilişkilerini tanımlanabilir hale getirmek** gerekir. İşte bu nedenle modelin, bu verileri dışa sunabilmesi için şu iki yapı kullanılır:
-
-* `FilterableColumnsProviderInterface`
-* `HasFilterableColumns` trait’i
-
----
-
-### ✅ `FilterableColumnsProviderInterface`
-
-Bu interface, modelin bir `defineFilterableColumns()` metodu içermesini zorunlu kılar. Amaç, sistemin modelden hangi alanları çıkarabileceğini ve kullanıcıya filtreleme veya koşul belirlemede hangi alanların sunulacağını belirlemektir.
+### 2. Dinamik Menü Oluşturma
 
 ```php
-class User extends Authenticatable implements FilterableColumnsProviderInterface
+$context = [
+    'menu.0.title' => 'Ana Sayfa',
+    'menu.0.url' => '/',
+    'menu.1.title' => 'Ürünler',
+    'menu.1.url' => '/products'
+];
+
+$menuTemplate = [
+    'titles' => '{{menu.*.title}}',
+    'urls' => '{{menu.*.url}}',
+    'full_menu' => '{{menu}}'
+];
 ```
 
-Bu interface, şunu garanti eder:
+### 3. Rapor Oluşturma
 
 ```php
-public static function defineFilterableColumns($deepLevel = 0, $currentLevel = 0);
+$context = [
+    'sales.0.amount' => 1500,
+    'sales.1.amount' => 2300,
+    'sales.2.amount' => 1800
+];
+
+$reportTemplate = [
+    'total_sales' => '@@sum({{sales.*.amount}})@@',
+    'average_sale' => '@@avg({{sales.*.amount}})@@',
+    'max_sale' => '@@max({{sales.*.amount}})@@'
+];
 ```
-
----
-
-### 🧬 `HasFilterableColumns` Trait
-
-Bu trait, yukarıdaki metodu çalıştıracak yardımcı metodları içerir. Örneğin:
-
-```php
-User::filterableColumns(2);
-```
-
-Bu, `defineFilterableColumns(2)` metodunu çağırır ve modeli maksimum 2 seviye derinlikte analiz eder.
-
-> Bu sayede hem `context` extraction sırasında, hem de kullanıcıya sunulan "kural oluşturma" arayüzlerinde hangi alanlar gösterilecek otomatikleşir.
-
----
-
-### 🏗️ `defineFilterableColumns()` Ne Yapar?
-
-Bu metot:
-
-* Modelin temel alanlarını (`id`, `name`, `status`, `email` gibi) tanımlar.
-* Belirtilen derinlik (`deepLevel`) parametresine göre **ilişkileri** de dahil eder.
-* Her tanım; `columnKey`, `columnType`, `columnName`, `label` gibi yapılandırmalar içerir.
-
-#### Örnek tanım:
-
-```php
-[
-    'columnKey' => 'status',
-    'columnType' => 'enum',
-    'columnName' => 'status',
-    'label' => 'Durum',
-]
-```
-
-#### İlişki örneği:
-
-```php
-[
-    'columnKey' => 'r_brands',
-    'columnType' => 'relation_hasMany',
-    'columnName' => 'r_brands',
-    'label' => 'Markalar',
-    'columnModelType' => Brand::class,
-    'inner' => Brand::filterableColumns($deepLevel, $currentLevel + 1),
-]
-```
-
----
-
-### 💡 Kullanım Senaryoları
-
-#### 1. Rule Engine
-
-```php
-Rule::make()
-    ->and('status', '=', 'active')
-    ->and('r_brands.name', '=', 'BMW');
-```
-
-Burada `status` ve `r_brands.name` alanlarının `defineFilterableColumns()` içinde tanımlanmış olması gerekir.
-
-#### 2. Context Çıkarma
-
-```php
-$context = DataProcessor::extractContext($model, $model::filterableColumns(2));
-```
-
-Bu sayede:
-
-```php
-[
-    'status' => 'active',
-    'r_brands.0.name' => 'BMW',
-]
-```
-
-şeklinde **dot-notation** ile context çıkartılır.
-
-#### 3. Değişken Yerine Koyma (Placeholder Replace)
-
-```php
-'title' => '{{r_brands.0.name}}'
-```
-
-gibi ifadeler otomatik olarak context’ten doldurulabilir hale gelir.
-
----
-
-### 🎓 Sonuç
-
-Bu yapı sayesinde:
-
-* Kod yazmadan ilişkisel alanlar dahil tüm model özellikleri sistem tarafından tanınır.
-* Otomasyon tetikleme, rule kontrolü ve action parametreleri tamamen **dinamik hale** gelir.
-* Paket farklı modellerle çalışabilir çünkü her model kendi `defineFilterableColumns()` metodunu tanımlar.
-

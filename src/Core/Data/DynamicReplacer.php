@@ -25,21 +25,22 @@ class DynamicReplacer
         $varRegex = self::buildVariableRegex($placeholders['variable']);
         $varExactRegex = self::buildVariableExactRegex($placeholders['variable']);
 
+        // Template'in tamamı bir function call'u mu kontrol et
+        $funcRegexFull = '/^' . preg_quote($placeholders['function']['start'], '/') .
+            '(\w+)\((.*?)(?:,\s*(\{.*\}))?\)' .
+            preg_quote($placeholders['function']['end'], '/') . '$/';
+
+        if (preg_match($funcRegexFull, $template, $fullMatch)) {
+            return self::executeFunction($fullMatch, $context);
+        }
+
         // RECURSIVE @@function(...)@@ çözümü
         do {
             $lastTemplate = $template;
             $template = preg_replace_callback($funcRegex, function ($matches) use ($context) {
-                $function = $matches[1];
-                $inner = trim($matches[2]);
-                $options = isset($matches[3]) ? json_decode($matches[3], true) : [];
-
-                if (preg_match('/^\{\{(.*?)\}\}$/', $inner, $innerMatch)) {
-                    $inner = DynamicReplacer::resolveRaw(trim($innerMatch[1]), $context);
-                } else {
-                    $inner = DynamicReplacer::replace($inner, $context);
-                }
-
-                return DynamicReplacer::applyFunction($function, $inner, $options);
+                $result = self::executeFunction($matches, $context);
+                // String context içinde array'i JSON olarak encode et
+                return is_array($result) ? json_encode($result, JSON_UNESCAPED_UNICODE) : $result;
             }, $template);
         } while ($template !== $lastTemplate);
 
@@ -47,12 +48,27 @@ class DynamicReplacer
             return self::resolveRaw(trim($singleMatch[1]), $context);
         }
 
-        $template =  preg_replace_callback($varRegex, function ($matches) use ($context) {
+        $template = preg_replace_callback($varRegex, function ($matches) use ($context) {
             $resolved = self::resolveRaw(trim($matches[1]), $context);
             return is_array($resolved) ? json_encode($resolved, JSON_UNESCAPED_UNICODE) : $resolved;
         }, $template);
 
         return $template;
+    }
+
+    protected static function executeFunction(array $matches, array $context): mixed
+    {
+        $function = $matches[1];
+        $inner = trim($matches[2]);
+        $options = isset($matches[3]) ? json_decode($matches[3], true) : [];
+
+        if (preg_match('/^\{\{(.*?)\}\}$/', $inner, $innerMatch)) {
+            $inner = self::resolveRaw(trim($innerMatch[1]), $context);
+        } else {
+            $inner = self::replace($inner, $context);
+        }
+
+        return self::applyFunction($function, $inner, $options);
     }
 
     protected static function buildFunctionRegex(array $config): string

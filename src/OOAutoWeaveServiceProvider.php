@@ -98,6 +98,9 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             $callback = $options['callback'] ?? null;
 
             try {
+                if (is_string($callback) && FunctionRegistry::has($callback)) {
+                    return FunctionRegistry::call($callback, $value, $options);
+                }
                 return is_callable($callback) ? $callback($value) : $value;
             } catch (\Throwable $e) {
                 return $options['catch'] ?? 'error';

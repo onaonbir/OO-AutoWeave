@@ -29,6 +29,17 @@ class ActionRegistry
         return static::$map[$type] ?? [];
     }
 
+    public static function getSafeDefinition(string $type): ?array
+    {
+        $definition = static::$map[$type] ?? null;
+
+        if ($definition) {
+            unset($definition['executor']);
+        }
+
+        return $definition;
+    }
+
     public static function getOption(string $type, string $key, mixed $default = null): mixed
     {
         return static::$map[$type]['options'][$key] ?? $default;

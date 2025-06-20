@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('branch_type')->nullable()->default('default');
             $table->json('parameters')->nullable();
             $table->integer('order')->default(0);
+            $table->json('settings')->nullable();
             $table->string('status')->default('active');
 
             $table->timestamps();

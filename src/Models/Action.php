@@ -17,12 +17,14 @@ class Action extends Model
         'type',
         'branch_type',
         'parameters',
+        'settings',
         'order',
         'status',
     ];
 
     protected $casts = [
         'parameters' => JsonCast::class,
+        'settings' => JsonCast::class,
     ];
 
     public function actionSet()

@@ -43,7 +43,7 @@ class ExecutionResolver
         $attributes = $context['attributes'] ?? [];
 
         $contextData = $model
-            ? DataProcessor::extractContext($model, method_exists($model, 'filterableColumns') ? $model::filterableColumns(1) : [])
+            ? DataProcessor::extractContext($model, method_exists($model, 'filterableColumns') ? $model::filterableColumns(3) : [])
             : $attributes;
 
         if ($set->execution_type === ExecutionTypeEnum::RULED->value) {

@@ -14,8 +14,8 @@ class Trigger extends Model
 
     protected $fillable = [
         'automation_id',
-        'morphable_type',//BU ALAN YENİ
-        'morphable_id',//BU ALAN YENİ
+        'morphable_type', // BU ALAN YENİ
+        'morphable_id', // BU ALAN YENİ
         'key',
         'group',
         'type',

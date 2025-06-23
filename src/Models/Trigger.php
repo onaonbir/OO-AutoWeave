@@ -14,6 +14,8 @@ class Trigger extends Model
 
     protected $fillable = [
         'automation_id',
+        'morphable_type',//BU ALAN YENİ
+        'morphable_id',//BU ALAN YENİ
         'key',
         'group',
         'type',
@@ -43,6 +45,11 @@ class Trigger extends Model
         );
     }
 
+    public function morphable()
+    {
+        return $this->morphTo();
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
@@ -51,5 +58,10 @@ class Trigger extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('order');
+    }
+
+    public function scopeOnlyMorphable($query)
+    {
+        return $query->whereNotNull('morphable_type')->whereNotNull('morphable_id');
     }
 }

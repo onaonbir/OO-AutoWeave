@@ -17,6 +17,9 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->string('label')->nullable();
 
+            $table->string('morphable_type')->nullable()->index('oo_wa_t_morphable_type_idx');
+            $table->string('morphable_id')->nullable()->index('oo_wa_t_morphable_id_idx');
+
             $table->string('key');
             $table->string('group');
             $table->string('type');

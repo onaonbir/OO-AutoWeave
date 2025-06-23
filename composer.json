@@ -1,6 +1,6 @@
 {
     "name": "onaonbir/oo-auto-weave",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "autoload": {
         "files": [
             "helpers/helpers.php"

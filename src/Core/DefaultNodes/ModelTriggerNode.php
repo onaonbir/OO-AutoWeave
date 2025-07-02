@@ -21,7 +21,35 @@ class ModelTriggerNode extends BaseNodeHandler
     {
         return [
             'type' => 'model_trigger',
-            'attributes' => ['icon' => 'bolt'],
+            'attributes' => [
+                'model' => null,
+                'event' => 'created',
+                '__options__' => [
+                    'label' => 'Model Olayı Tetikleyici',
+                    'description' => 'Belirli bir model olayında akışı başlatır (örneğin: created, updated, deleted).',
+                    'form_fields' => [
+                        [
+                            'key' => 'model',
+                            'label' => 'Model',
+                            'type' => 'input',
+                            'required' => true,
+                            'hint' => 'Tam sınıf adı: App\\Models\\User gibi',
+                        ],
+                        [
+                            'key' => 'event',
+                            'label' => 'Olay Türü',
+                            'type' => 'select',
+                            'required' => true,
+                            'default' => 'created',
+                            'options' => [
+                                ['label' => 'Oluşturuldu (created)', 'value' => 'created'],
+                                ['label' => 'Güncellendi (updated)', 'value' => 'updated'],
+                                ['label' => 'Silindi (deleted)', 'value' => 'deleted'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

@@ -77,14 +77,23 @@ class NodeRegistry
 
         $defaults = $definition['attributes'] ?? [];
 
-        $mergedAttributes = array_merge($defaults, $attributes);
+        // __options__'u ayrı tut
+        $options = $defaults['__options__'] ?? [];
+
+        // __options__ dışındaki her şey default olarak alınabilir
+        $cleanDefaults = collect($defaults)
+            ->reject(fn ($_, $attrKey) => str_starts_with($attrKey, '__'))
+            ->toArray();
+
+        $mergedAttributes = array_merge($cleanDefaults, $attributes);
 
         return [
             'key' => $key,
             'type' => $type,
-            'attributes' => $mergedAttributes,
+            'attributes' => array_merge($mergedAttributes, ['__options__' => $options]),
             'auto_tick' => $autoTick,
             'auto_progress' => $autoProgress,
         ];
     }
+
 }

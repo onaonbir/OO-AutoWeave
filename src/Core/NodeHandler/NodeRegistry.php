@@ -27,7 +27,7 @@ class NodeRegistry
             $attributes = $definition['attributes'] ?? $attributes;
             $options = $attributes['__options__'] ?? [];
 
-            //TODO MAYBE ANOTHER LOVE ?
+            // TODO MAYBE ANOTHER LOVE ?
             unset($attributes['__options__']);
         } else {
             $options = [];

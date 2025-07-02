@@ -34,9 +34,21 @@ class SendLogNode extends BaseNodeHandler
         return [
             'type' => 'send_log',
             'attributes' => [
-                'icon' => 'log',
-                'label' => 'Send Log',
-                'description' => 'Writes a log message to the Laravel logger',
+                'message' => 'Log entry',
+                '__options__' => [
+                    'label' => 'Log Mesajı Gönder',
+                    'description' => 'Laravel log dosyasına bir mesaj yazar.',
+                    'form_fields' => [
+                        [
+                            'key' => 'message',
+                            'label' => 'Mesaj',
+                            'type' => 'textarea',
+                            'hint' => 'Log dosyasına yazılacak mesaj.',
+                            'default' => 'Log entry',
+                            'required' => true,
+                        ],
+                    ],
+                ],
             ],
         ];
     }

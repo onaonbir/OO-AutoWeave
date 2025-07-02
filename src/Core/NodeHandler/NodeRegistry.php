@@ -10,7 +10,6 @@ class NodeRegistry
 
     public static function register(string $type, mixed $executor, array $attributes = []): void
     {
-        // Class-based handler ise
         if (
             is_string($executor)
             && class_exists($executor)
@@ -26,11 +25,18 @@ class NodeRegistry
 
             $type = $definition['type'] ?? $type;
             $attributes = $definition['attributes'] ?? $attributes;
+            $options = $attributes['__options__'] ?? [];
+
+            //TODO MAYBE ANOTHER LOVE ?
+            unset($attributes['__options__']);
+        } else {
+            $options = [];
         }
 
         static::$map[$type] = [
             'executor' => $executor,
             'attributes' => $attributes,
+            'options' => $options, // 🔥 burada saklıyoruz
         ];
     }
 

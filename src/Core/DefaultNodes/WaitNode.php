@@ -25,7 +25,24 @@ class WaitNode extends BaseNodeHandler
     {
         return [
             'type' => 'wait',
-            'attributes' => ['icon' => 'clock'],
+            'attributes' => [
+                'seconds' => 1,
+                '__options__' => [
+                    'label' => 'Bekleme Adımı',
+                    'description' => 'Belirtilen süre boyunca akışı duraklatır.',
+                    'form_fields' => [
+                        [
+                            'key' => 'seconds',
+                            'label' => 'Bekleme Süresi (saniye)',
+                            'type' => 'number',
+                            'hint' => 'Bu adımda akışın kaç saniye bekleyeceğini belirtin.',
+                            'required' => true,
+                            'min' => 1,
+                            'default' => 1,
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

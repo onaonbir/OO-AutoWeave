@@ -3,7 +3,7 @@
 namespace OnaOnbir\OOAutoWeave\Traits;
 
 use Illuminate\Support\Facades\Log;
-use OnaOnbir\OOAutoWeaveV\Models\Flow;
+use OnaOnbir\OOAutoWeave\Models\Flow;
 
 trait HasFlowTriggers
 {

@@ -27,8 +27,6 @@ class NodeRegistry
             $attributes = $definition['attributes'] ?? $attributes;
             $options = $attributes['__options__'] ?? [];
 
-            // TODO MAYBE ANOTHER LOVE ?
-            unset($attributes['__options__']);
         } else {
             $options = [];
         }
@@ -36,7 +34,7 @@ class NodeRegistry
         static::$map[$type] = [
             'executor' => $executor,
             'attributes' => $attributes,
-            'options' => $options, // 🔥 burada saklıyoruz
+            'options' => $options,
         ];
     }
 
@@ -62,5 +60,31 @@ class NodeRegistry
     public static function all(): array
     {
         return static::$map;
+    }
+
+    public static function makeNode(
+        string $type,
+        string $key,
+        array $attributes = [],
+        bool $autoTick = true,
+        bool $autoProgress = true
+    ): array {
+        $definition = static::$map[$type] ?? null;
+
+        if (! $definition) {
+            throw new \InvalidArgumentException("Tanımlı bir node tipi bulunamadı: {$type}");
+        }
+
+        $defaults = $definition['attributes'] ?? [];
+
+        $mergedAttributes = array_merge($defaults, $attributes);
+
+        return [
+            'key' => $key,
+            'type' => $type,
+            'attributes' => $mergedAttributes,
+            'auto_tick' => $autoTick,
+            'auto_progress' => $autoProgress,
+        ];
     }
 }

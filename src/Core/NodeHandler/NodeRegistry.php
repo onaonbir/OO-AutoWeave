@@ -39,13 +39,13 @@ class NodeRegistry
         $definition = static::$map[$type] ?? null;
 
         if (! $definition) {
-            return NodeHandlerResult::error(message:"Tanımlı node bulunamadı: {$type}");
+            return NodeHandlerResult::error(message: "Tanımlı node bulunamadı: {$type}");
         }
 
         $executor = $definition['executor'] ?? null;
 
         if (! is_callable($executor)) {
-            return NodeHandlerResult::error(message:"Node executor çalıştırılamıyor: {$type}");
+            return NodeHandlerResult::error(message: "Node executor çalıştırılamıyor: {$type}");
         }
 
         $node['__registry_attributes'] = $definition['attributes'] ?? [];

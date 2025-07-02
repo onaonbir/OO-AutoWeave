@@ -40,7 +40,8 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         }
     }
 
-    public function register() {
+    public function register()
+    {
         $this->mergeConfigFrom(
             __DIR__.'/../config/'.$this->packageName.'.php',
             $this->packageName
@@ -66,6 +67,4 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
             }
         }
     }
-
-
 }

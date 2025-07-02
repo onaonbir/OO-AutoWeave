@@ -72,13 +72,13 @@ class Flow extends Model
 
         // Bağlantıları da sil
         $structure['edges'] = collect($structure['edges'] ?? [])
-            ->reject(fn ($edge) =>
-                $edge['connection']['from'] === $key || $edge['connection']['to'] === $key
+            ->reject(fn ($edge) => $edge['connection']['from'] === $key || $edge['connection']['to'] === $key
             )
             ->values()
             ->toArray();
 
         $this->structure = $structure;
+
         return $this->save();
     }
 
@@ -96,6 +96,7 @@ class Flow extends Model
             ->toArray();
 
         $this->structure = $structure;
+
         return $this->save();
     }
 }

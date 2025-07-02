@@ -95,5 +95,4 @@ class NodeRegistry
             'auto_progress' => $autoProgress,
         ];
     }
-
 }

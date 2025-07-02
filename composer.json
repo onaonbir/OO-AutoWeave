@@ -1,6 +1,6 @@
 {
     "name": "onaonbir/oo-auto-weave",
-    "version": "1.0.9",
+    "version": "1.0.0",
     "autoload": {
         "files": [
             "helpers/helpers.php"
@@ -22,13 +22,7 @@
             ]
         }
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/onaonbir/OO-Weave-Replace"
-        }
-    ],
     "require": {
-        "onaonbir/oo-weave-replace": "^1.0"
+
     }
 }

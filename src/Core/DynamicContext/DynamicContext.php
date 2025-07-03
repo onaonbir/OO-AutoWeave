@@ -197,79 +197,24 @@ class DynamicContext
     {
         $resolvedValues = [];
 
-        // wildcardPath'in son parçası (örn: 'additional_emails' veya 'name')
-        $targetProperty = null;
-        $pathParts = explode('.', $wildcardPath);
-        if (! empty($pathParts)) {
-            $targetProperty = array_pop($pathParts);
-        }
+        // Wildcard pattern'ini regex'e çevir
+        $escapedPath = preg_quote($wildcardPath, '/');
+        $regexPattern = '/^' . str_replace('\*', '[^.]+', $escapedPath) . '$/';
 
-        // Ana wildcard yolunu oluştur (örn: 'r_causer.r_managers.*' veya 'r_users.*')
-        $baseWildcardPath = implode('.', $pathParts);
-
-        // Regex pattern'ini oluştur
-        $regexBasePattern = '/^'.str_replace('\*', '([^.]+)', preg_quote($baseWildcardPath, '/')).'\.(.*)$/';
-
-        $groupedMatches = [];
-
+        // Context'teki tüm key'leri kontrol et
         foreach ($context as $flatKey => $value) {
-            if (preg_match($regexBasePattern, $flatKey, $matches)) {
-                // Her bir * tarafından yakalanan değerleri al
-                $wildcardValues = [];
-                for ($i = 1; $i <= substr_count($baseWildcardPath, '*'); $i++) {
-                    $wildcardValues[] = $matches[$i];
-                }
-
-                // Benzersiz grup anahtarı oluştur
-                $groupKey = str_replace(array_fill(0, count($wildcardValues), '*'), $wildcardValues, $baseWildcardPath);
-
-                // Kalan düzleştirilmiş anahtar
-                $remainingFlatKey = $matches[count($matches) - 1];
-
-                if (! isset($groupedMatches[$groupKey])) {
-                    $groupedMatches[$groupKey] = [];
-                }
-                $groupedMatches[$groupKey][$remainingFlatKey] = $value;
+            if (preg_match($regexPattern, $flatKey)) {
+                $resolvedValues[] = $value;
             }
         }
 
-        foreach ($groupedMatches as $groupKey => $groupData) {
-            $undottedGroupData = Arr::undot($groupData);
-
-            // Hedef property kontrolü
-            if ($targetProperty && ! str_contains($wildcardPath, $targetProperty.'.*')) {
-                if (isset($undottedGroupData[$targetProperty]) && ! is_array($undottedGroupData[$targetProperty])) {
-                    $resolvedValues[] = $undottedGroupData[$targetProperty];
-                } elseif (isset($undottedGroupData[$targetProperty]) && is_array($undottedGroupData[$targetProperty])) {
-                    $resolvedValues[] = array_values($undottedGroupData[$targetProperty]);
-                } else {
-                    $resolvedValues[] = $undottedGroupData;
-                }
-            } else {
-                if (is_array($undottedGroupData)) {
-                    if (array_is_list($undottedGroupData)) {
-                        $resolvedValues[] = $undottedGroupData;
-                    } else {
-                        $resolvedValues[] = array_values($undottedGroupData);
-                    }
-                } else {
-                    $resolvedValues[] = $undottedGroupData;
-                }
-            }
-        }
-
-        // Flatten işlemi
-        $flattened = [];
-        foreach ($resolvedValues as $value) {
-            if (is_array($value) && ! empty($value) && is_array(reset($value))) {
-                $flattened = array_merge($flattened, $value);
-            } else {
-                $flattened[] = $value;
-            }
-        }
-
-        return $flattened;
+        return $resolvedValues;
     }
+
+    /**
+     * Verilen key'in wildcard pattern'e uyup uymadığını kontrol eder
+     */
+
 
     protected static function applyFunction(string $function, mixed $value, array $options = []): mixed
     {

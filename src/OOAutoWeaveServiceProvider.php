@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use OnaOnbir\OOAutoWeave\Core\DynamicContext\Functions\FunctionRegistry;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\BaseNodeHandler;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeRegistry;
 
@@ -55,6 +56,23 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         ], $this->packageName.'-config');
 
         $this->registerConfiguredEventListeners();
+
+        FunctionRegistry::register('md5', fn ($value) => md5($value));
+
+        FunctionRegistry::register('upper', function ($value, $options) {
+            return strtoupper($value);
+        });
+
+        FunctionRegistry::register('implode', function ($value, $options) {
+            return is_array($value) ? implode($options['separator'] ?? ',', $value) : (string) $value;
+        });
+
+        FunctionRegistry::register('limit', function ($value, $options) {
+            $limit = $options['limit'] ?? 10;
+
+
+            return substr($value, 0, $limit);
+        });
     }
 
     protected function registerConfiguredEventListeners(): void

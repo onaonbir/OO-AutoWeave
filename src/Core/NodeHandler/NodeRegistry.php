@@ -25,11 +25,10 @@ class NodeRegistry
 
             $type = $definition['type'] ?? $type;
             $attributes = $definition['attributes'] ?? $attributes;
-            $options = $attributes['__options__'] ?? [];
-
-        } else {
-            $options = [];
         }
+
+        // 🔥 HER ZAMAN attributes'tan options çek
+        $options = $attributes['__options__'] ?? [];
 
         static::$map[$type] = [
             'executor' => $executor,

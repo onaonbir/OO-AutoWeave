@@ -91,5 +91,4 @@ class EdgeRegistry
             'attributes' => array_merge($mergedAttributes, ['__options__' => $options]),
         ];
     }
-
 }

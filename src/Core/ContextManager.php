@@ -206,4 +206,58 @@ class ContextManager
             + count($this->contextStack['temp'])
             + collect($this->contextStack['nodes'] ?? [])->sum(fn ($ctx) => count($ctx));
     }
+
+
+
+    //TODO MUST BE CHANGE ??
+
+    public function resolveArrayWithTemplates(array|string|null $input): array
+    {
+        $items = is_array($input) ? $input : (is_string($input) ? [$input] : []);
+        $resolved = [];
+
+        foreach ($items as $item) {
+            if (is_string($item) && preg_match('/\{\{(.+?)\}\}/', $item, $matches)) {
+                $dotPath = trim($matches[1]);
+
+                // scope otomatik çıkarılabiliyor: global.model.user.id → ['global', 'model.user.id']
+                [$scope, $key] = str_contains($dotPath, '.')
+                    ? explode('.', $dotPath, 2)
+                    : ['global', $dotPath];
+
+                $value = $this->get($key, null, null, $scope);
+
+                if (is_array($value)) {
+                    $resolved = array_merge($resolved, $value);
+                } elseif (!is_null($value)) {
+                    $resolved[] = $value;
+                }
+
+                // Bulunamayanlar otomatik atlanıyor
+            } else {
+                $resolved[] = $item;
+            }
+        }
+
+        return array_values(array_filter($resolved));
+    }
+
+    public function resolveValueFromTemplate(string|int|null $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (preg_match('/\{\{(.+?)\}\}/', $value, $matches)) {
+            $dotPath = trim($matches[1]);
+
+            [$scope, $key] = str_contains($dotPath, '.')
+                ? explode('.', $dotPath, 2)
+                : ['global', $dotPath];
+
+            return $this->get($key, null, null, $scope);
+        }
+
+        return $value;
+    }
 }

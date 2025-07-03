@@ -238,13 +238,14 @@ class ContextManager
 
     public function resolveValueFromTemplate(string|int|null $value): mixed
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $value;
         }
 
         if (preg_match('/\{\{(.+?)\}\}/', $value, $matches)) {
             $dotPath = trim($matches[1]);
             [$scope, $key, $nodeKey] = $this->parseTemplatePath($dotPath);
+
             return $this->get($key, null, $nodeKey, $scope);
         }
 

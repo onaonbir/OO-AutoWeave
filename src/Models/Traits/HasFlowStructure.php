@@ -21,9 +21,7 @@ trait HasFlowStructure
         $this->{$this->getStructureFieldName()} = $structure;
     }
 
-
-
-    //NODE HELPERS
+    // NODE HELPERS
     public function getNodes(): Collection
     {
         return collect($this->getStructure()['nodes'] ?? []);
@@ -66,6 +64,7 @@ trait HasFlowStructure
             ->toArray();
 
         $this->setStructure($structure);
+
         return $this->save();
     }
 
@@ -83,11 +82,11 @@ trait HasFlowStructure
             ->toArray();
 
         $this->setStructure($structure);
+
         return $this->save();
     }
 
-
-    //EDGE HELPERS
+    // EDGE HELPERS
     public function getEdges(): Collection
     {
         return collect($this->getStructure()['edges'] ?? []);
@@ -95,7 +94,7 @@ trait HasFlowStructure
 
     public function getEdgeByKey(string $key): ?array
     {
-        return  $this->getEdges()->firstWhere('key', $key);
+        return $this->getEdges()->firstWhere('key', $key);
     }
 
     public function getEdgeByFromTo(string $from, string $to): ?array
@@ -117,6 +116,7 @@ trait HasFlowStructure
             ->toArray();
 
         $this->setStructure($structure);
+
         return $this->save();
     }
 
@@ -134,6 +134,7 @@ trait HasFlowStructure
             ->toArray();
 
         $this->setStructure($structure);
+
         return $this->save();
     }
 
@@ -150,6 +151,7 @@ trait HasFlowStructure
             ->toArray();
 
         $this->setStructure($structure);
+
         return $this->save();
     }
 
@@ -163,12 +165,14 @@ trait HasFlowStructure
                     ($edge['connection']['to'] ?? null) === $to) {
                     return array_merge($edge, $newData);
                 }
+
                 return $edge;
             })
             ->values()
             ->toArray();
 
         $this->setStructure($structure);
+
         return $this->save();
     }
 }

@@ -3,13 +3,11 @@
 namespace OnaOnbir\OOAutoWeave\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use OnaOnbir\OOAutoWeave\Models\Traits\HasFlowStructure;
 use OnaOnbir\OOAutoWeave\Models\Traits\JsonCast;
 
 class Flow extends Model
 {
-
     use HasFlowStructure;
 
     public function getTable(): string
@@ -30,6 +28,4 @@ class Flow extends Model
         'metadata' => JsonCast::class,
         'is_active' => 'boolean',
     ];
-
-
 }

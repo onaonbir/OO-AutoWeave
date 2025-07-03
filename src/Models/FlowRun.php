@@ -3,7 +3,6 @@
 namespace OnaOnbir\OOAutoWeave\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use OnaOnbir\OOAutoWeave\Enums\NodeStatus;
 use OnaOnbir\OOAutoWeave\Models\Traits\HasFlowStructure;
@@ -11,7 +10,6 @@ use OnaOnbir\OOAutoWeave\Models\Traits\JsonCast;
 
 class FlowRun extends Model
 {
-
     use HasFlowStructure;
 
     protected function getStructureFieldName(): string
@@ -49,10 +47,6 @@ class FlowRun extends Model
     {
         return $this->morphTo();
     }
-
-
-
-
 
     /**
      * Node'un mevcut durumunu döner
@@ -100,7 +94,6 @@ class FlowRun extends Model
                 collect($incomingNodes)->every(fn ($k) => $processedNodes->contains($k));
         });
     }
-
 
     /**
      * Akışın genel durumunu hesaplar

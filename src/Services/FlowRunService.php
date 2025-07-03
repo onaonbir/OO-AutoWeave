@@ -7,6 +7,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
+use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeTypeRegistry;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeHandlerResult;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeRegistry;
 use OnaOnbir\OOAutoWeave\Enums\NodeStatus;
@@ -161,6 +162,9 @@ class FlowRunService
                 $contextManager->flushTemp()->persist();
 
 
+                if ($result->success && ($node['auto_progress'] ?? false)) {
+                    $this->processNextNodes($run, $nodeKey, $states);
+                }
 
                 // TODO Bİ GARİP OLDU...
                 $existingStates = $run->node_states ?? [];
@@ -171,10 +175,7 @@ class FlowRunService
                     'status' => $allCompleted ? 'completed' : 'running',
                 ]);
 
-                // Başarılıysa ve otomatik ilerleme aktifse sonraki node'ları işle
-                if ($result->success && ($node['auto_progress'] ?? false)) {
-                    $this->processNextNodes($run, $nodeKey, $states);
-                }
+
 
                 return $run->fresh();
 
@@ -224,28 +225,19 @@ class FlowRunService
 
     protected function shouldSkipEdge(FlowRun $run, string $fromKey, string $toKey): bool
     {
-        $edge = $run->getEdges()->first(function ($edge) use ($fromKey, $toKey) {
-            return $edge['connection']['from'] === $fromKey && $edge['connection']['to'] === $toKey;
-        });
+        $edge = $run->getEdges()->first(fn($e) =>
+            $e['connection']['from'] === $fromKey && $e['connection']['to'] === $toKey
+        );
 
-        if (! $edge || ! isset($edge['condition'])) {
-            Log::debug("Edge [{$fromKey} → {$toKey}] has no condition, not skipping.");
+        $type = $edge['type'] ?? 'default';
 
-            return false;
+        try {
+            $evaluator = EdgeTypeRegistry::resolve($type);
+            return ! $evaluator->shouldPass($run, $edge);
+        } catch (\Throwable $e) {
+            Log::error("Edge evaluation error [{$fromKey}→{$toKey}]: " . $e->getMessage());
+            return true;
         }
-
-        $manager = $this->getContextManager($run);
-        $context = $manager->all();
-        $result = FlowRun::matchCondition($edge['condition'], $context);
-
-        Log::debug("Evaluating edge condition for [{$fromKey} → {$toKey}]:", [
-            'condition' => $edge['condition'],
-            'evaluated_context' => Arr::get($context, $edge['condition']['key'] ?? 'undefined'),
-            'full_context' => $context,
-            'matched' => $result,
-        ]);
-
-        return ! $result;
     }
 
     /**

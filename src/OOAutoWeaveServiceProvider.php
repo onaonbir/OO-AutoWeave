@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use OnaOnbir\OOAutoWeave\Core\DefaultEdges\ConditionalEdge;
+use OnaOnbir\OOAutoWeave\Core\DefaultEdges\DefaultEdge;
+use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeTypeRegistry;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\BaseNodeHandler;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeRegistry;
 
@@ -57,6 +60,8 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         $this->registerConfiguredEventListeners();
 
 
+        EdgeTypeRegistry::register('default', DefaultEdge::class);
+        EdgeTypeRegistry::register('conditional', ConditionalEdge::class);
     }
 
     protected function registerConfiguredEventListeners(): void

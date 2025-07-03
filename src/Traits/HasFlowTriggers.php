@@ -17,14 +17,19 @@ trait HasFlowTriggers
     protected static function triggerFlows($model, string $event)
     {
         $flows = Flow::where('is_active', true)
-            ->whereJsonContains('structure->nodes', [
-                'type' => 'model_trigger',
-                'attributes' => [
-                    'model' => get_class($model),
-                    'event' => $event,
-                ],
-            ])
-            ->get();
+            ->whereJsonContains('structure->nodes', [['type' => 'model_trigger']])
+            ->get()->filter(function ($flow) use ($event, $model) {
+                foreach ($flow->structure['nodes'] ?? [] as $node) {
+                    if (
+                        $node['type'] === 'model_trigger' &&
+                        ($node['attributes']['model'] ?? null) === get_class($model) &&
+                        ($node['attributes']['event'] ?? null) === $event
+                    ) {
+                        return true;
+                    }
+                }
+                return false;
+            });
 
         foreach ($flows as $flow) {
             try {

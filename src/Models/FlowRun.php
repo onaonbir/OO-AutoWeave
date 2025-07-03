@@ -6,10 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use OnaOnbir\OOAutoWeave\Enums\NodeStatus;
+use OnaOnbir\OOAutoWeave\Models\Traits\HasFlowStructure;
 use OnaOnbir\OOAutoWeave\Models\Traits\JsonCast;
 
 class FlowRun extends Model
 {
+
+    use HasFlowStructure;
+
+    protected function getStructureFieldName(): string
+    {
+        return 'base_structure';
+    }
+
     public function getTable(): string
     {
         return config('oo-auto-weave.tables.flow_runs');
@@ -41,29 +50,9 @@ class FlowRun extends Model
         return $this->morphTo();
     }
 
-    /**
-     * Akıştaki tüm node'ları döner
-     */
-    public function getNodes(): Collection
-    {
-        return collect($this->base_structure['nodes'] ?? []);
-    }
 
-    /**
-     * Akıştaki tüm bağlantıları (edge'leri) döner
-     */
-    public function getEdges(): Collection
-    {
-        return collect($this->base_structure['edges'] ?? []);
-    }
 
-    /**
-     * Belirtilen key'e sahip node'u döner
-     */
-    public function getNode(string $key): ?array
-    {
-        return $this->getNodes()->firstWhere('key', $key);
-    }
+
 
     /**
      * Node'un mevcut durumunu döner
@@ -80,19 +69,6 @@ class FlowRun extends Model
     {
         return collect($this->node_states ?? [])
             ->sortBy(fn ($state) => $state['started_at'] ?? now()->toIso8601String());
-    }
-
-    /**
-     * Başlangıç node'larını döner (gelen bağlantısı olmayan node'lar)
-     */
-    public function getStartNodes(): Collection
-    {
-        $nodes = $this->getNodes();
-        $edges = $this->getEdges();
-
-        $nodesWithIncoming = $edges->pluck('connection.to')->unique()->all();
-
-        return $nodes->filter(fn ($node) => ! in_array($node['key'], $nodesWithIncoming));
     }
 
     /**
@@ -125,15 +101,6 @@ class FlowRun extends Model
         });
     }
 
-    /**
-     * Node'un başlangıç node'u olup olmadığını kontrol eder
-     */
-    public function isStartNode(string $nodeKey): bool
-    {
-        $edges = $this->getEdges();
-
-        return $edges->where('connection.to', $nodeKey)->isEmpty();
-    }
 
     /**
      * Akışın genel durumunu hesaplar
@@ -233,41 +200,5 @@ class FlowRun extends Model
             'total' => $total,
             'status_breakdown' => $breakdown,
         ];
-    }
-
-    // FlowRun modeline bu metodu ekleyin
-    public static function matchCondition(array $condition, array $context): bool
-    {
-        $conditionType = $condition['type'] ?? null;
-        $key = $condition['key'] ?? null;
-        $value = $condition['value'] ?? null;
-
-        $contextValue = Arr::get($context, $key);
-        if (is_null($contextValue)) {
-            return false;
-        }
-
-        switch ($conditionType) {
-            case 'equals':
-                return $contextValue == $value;
-            case 'not_equals':
-                return $contextValue != $value;
-            case 'greater_than':
-                return $contextValue > $value;
-            case 'less_than':
-                return $contextValue < $value;
-            case 'contains':
-                return str_contains($contextValue, $value);
-            case 'starts_with':
-                return str_starts_with($contextValue, $value);
-            case 'ends_with':
-                return str_ends_with($contextValue, $value);
-            case 'in_array':
-                return in_array($contextValue, (array) $value);
-            case 'not_in_array':
-                return ! in_array($contextValue, (array) $value);
-            default:
-                return false;
-        }
     }
 }

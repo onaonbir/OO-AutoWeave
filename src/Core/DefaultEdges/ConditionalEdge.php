@@ -9,7 +9,7 @@ class ConditionalEdge extends BaseEdgeType
 {
     public function shouldPass(array $edge, ContextManager $manager): bool
     {
-        $condition = $edge['condition'] ?? [];
+        $condition = $edge['attributes']['condition'] ?? [];
 
         $actual = data_get($manager, $condition['key'] ?? '');
         $expected = $condition['value'] ?? null;

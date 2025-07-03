@@ -16,7 +16,15 @@ class DefaultEdge extends BaseEdgeType
     {
         return [
             'type' => 'default',
-            'attributes' => ['icon' => 'arrow-right'],
+            'attributes' => [
+                '__options__' => [
+                    'label' => 'Varsayılan Bağlantı',
+                    'description' => 'Dümdüz geçen bağlantı',
+                    'form_fields' => [
+
+                    ],
+                ],
+            ],
         ];
     }
 }

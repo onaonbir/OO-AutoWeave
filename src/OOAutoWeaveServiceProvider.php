@@ -114,6 +114,7 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
 
         $this->registerConfiguredEventListeners();
 
+
     }
 
     protected function registerConfiguredEventListeners(): void

@@ -14,7 +14,7 @@ class DynamicContext
             }, $template);
         }
 
-        if (!is_string($template)) {
+        if (! is_string($template)) {
             return $template;
         }
 
@@ -31,8 +31,9 @@ class DynamicContext
         }
 
         // Karmaşık template içindeki tüm değişkenleri çöz
-        $template = preg_replace_callback($varRegex, function ($matches) use ($context, $varExactRegex) {
+        $template = preg_replace_callback($varRegex, function ($matches) use ($context) {
             $resolved = self::resolveRaw(trim($matches[1]), $context);
+
             return is_array($resolved) ? json_encode($resolved, JSON_UNESCAPED_UNICODE) : $resolved;
         }, $template);
 
@@ -91,7 +92,7 @@ class DynamicContext
         $resolvedValues = [];
 
         $escapedPath = preg_quote($wildcardPath, '/');
-        $regexPattern = '/^' . str_replace('\*', '[^.]+', $escapedPath) . '$/';
+        $regexPattern = '/^'.str_replace('\*', '[^.]+', $escapedPath).'$/';
 
         foreach ($context as $flatKey => $value) {
             if (preg_match($regexPattern, $flatKey)) {
@@ -109,11 +110,12 @@ class DynamicContext
         }
 
         $trimmed = trim($str);
-        if (!in_array($trimmed[0], ['[', '{'])) {
+        if (! in_array($trimmed[0], ['[', '{'])) {
             return false;
         }
 
         json_decode($trimmed);
+
         return json_last_error() === JSON_ERROR_NONE;
     }
 }

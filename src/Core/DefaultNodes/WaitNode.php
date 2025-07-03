@@ -34,7 +34,7 @@ class WaitNode extends BaseNodeHandler
                         [
                             'key' => 'seconds',
                             'label' => 'Bekleme Süresi (saniye)',
-                            'type' => 'number',
+                            'type' => 'input.number',
                             'hint' => 'Bu adımda akışın kaç saniye bekleyeceğini belirtin.',
                             'required' => true,
                             'min' => 1,

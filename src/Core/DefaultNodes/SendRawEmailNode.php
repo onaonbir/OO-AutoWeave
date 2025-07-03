@@ -50,7 +50,7 @@ class SendRawEmailNode extends BaseNodeHandler
                         [
                             'key' => 'to',
                             'label' => 'Alıcı E-posta',
-                            'type' => 'email',
+                            'type' => 'input.array',
                             'required' => true,
                             'hint' => 'E-posta gönderilecek adres',
                         ],

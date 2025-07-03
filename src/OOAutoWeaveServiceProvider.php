@@ -17,7 +17,6 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->bootNodesFrom(__DIR__.'/Core/DefaultNodes', 'OnaOnbir\\OOAutoWeave\\Core\\DefaultNodes');
-
     }
 
     protected function bootNodesFrom(string $directory, string $baseNamespace): void

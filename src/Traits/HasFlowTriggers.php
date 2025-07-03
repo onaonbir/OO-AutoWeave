@@ -42,7 +42,8 @@ trait HasFlowTriggers
                         'model_class' => get_class($model),
                         'model_extracted' => \OnaOnbir\OOAutoWeave\Core\DynamicContext\ModelExtractor::extract(
                             $model,
-                            $model::filterableColumns(2)
+                            $model::filterableColumns(2),
+                            true
                         ),
                         'event' => $event,
                         'changes' => method_exists($model, 'getDirty') ? $model->getDirty() : [],

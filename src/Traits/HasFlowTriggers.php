@@ -39,6 +39,7 @@ trait HasFlowTriggers
                     $model,
                     [
                         'model' => $model->toArray(),
+                        'model_class' => get_class($model),
                         'event' => $event,
                         'changes' => method_exists($model, 'getDirty') ? $model->getDirty() : [],
                     ]

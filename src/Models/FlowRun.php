@@ -243,14 +243,14 @@ class FlowRun extends Model
         $key = $condition['key'] ?? null;
         $value = $condition['value'] ?? null;
 
-        Log::info('context_here', ['val' => $context]);
+
 
         $contextValue = Arr::get($context, $key);
         if (is_null($contextValue)) {
             return false;
         }
 
-        Log::info('contextValue', ['val' => $contextValue]);
+
 
         switch ($conditionType) {
             case 'equals':

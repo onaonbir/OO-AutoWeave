@@ -218,20 +218,16 @@ class ContextManager
             if (is_string($item) && preg_match('/\{\{(.+?)\}\}/', $item, $matches)) {
                 $dotPath = trim($matches[1]);
 
-                // scope otomatik çıkarılabiliyor: global.model.user.id → ['global', 'model.user.id']
-                [$scope, $key] = str_contains($dotPath, '.')
-                    ? explode('.', $dotPath, 2)
-                    : ['global', $dotPath];
+                // 🔍 Yeni: scope ve path ayrımı
+                [$scope, $key, $nodeKey] = $this->parseTemplatePath($dotPath);
 
-                $value = $this->get($key, null, null, $scope);
+                $value = $this->get($key, null, $nodeKey, $scope);
 
                 if (is_array($value)) {
                     $resolved = array_merge($resolved, $value);
                 } elseif (! is_null($value)) {
                     $resolved[] = $value;
                 }
-
-                // Bulunamayanlar otomatik atlanıyor
             } else {
                 $resolved[] = $item;
             }
@@ -242,20 +238,45 @@ class ContextManager
 
     public function resolveValueFromTemplate(string|int|null $value): mixed
     {
-        if (! is_string($value)) {
+        if (!is_string($value)) {
             return $value;
         }
 
         if (preg_match('/\{\{(.+?)\}\}/', $value, $matches)) {
             $dotPath = trim($matches[1]);
-
-            [$scope, $key] = str_contains($dotPath, '.')
-                ? explode('.', $dotPath, 2)
-                : ['global', $dotPath];
-
-            return $this->get($key, null, null, $scope);
+            [$scope, $key, $nodeKey] = $this->parseTemplatePath($dotPath);
+            return $this->get($key, null, $nodeKey, $scope);
         }
 
         return $value;
+    }
+
+    public function resolveInterpolatedString(string $template): string
+    {
+        return preg_replace_callback('/\{\{(.+?)\}\}/', function ($matches) {
+            $dotPath = trim($matches[1]);
+            [$scope, $key, $nodeKey] = $this->parseTemplatePath($dotPath);
+
+            $value = $this->get($key, '', $nodeKey, $scope);
+
+            return is_scalar($value) ? $value : json_encode($value);
+        }, $template);
+    }
+
+    protected function parseTemplatePath(string $path): array
+    {
+        $segments = explode('.', $path);
+
+        $scope = $segments[0] ?? 'global';
+        $nodeKey = null;
+
+        if ($scope === 'nodes' && isset($segments[1])) {
+            $nodeKey = $segments[1];
+            $key = implode('.', array_slice($segments, 2));
+        } else {
+            $key = implode('.', array_slice($segments, 1));
+        }
+
+        return [$scope, $key, $nodeKey];
     }
 }

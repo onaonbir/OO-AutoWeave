@@ -3,10 +3,12 @@
 namespace OnaOnbir\OOAutoWeave\Core;
 
 use Illuminate\Support\Arr;
+use OnaOnbir\OOAutoWeave\Core\DynamicContext\DynamicContext;
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
 class ContextManager
 {
+
     protected static ?self $instance = null;
 
     public static function bindToRun(FlowRun $run): self
@@ -206,6 +208,11 @@ class ContextManager
             + count($this->contextStack['shared'])
             + count($this->contextStack['temp'])
             + collect($this->contextStack['nodes'] ?? [])->sum(fn ($ctx) => count($ctx));
+    }
+
+    public function resolveContext(mixed $template): mixed
+    {
+        return DynamicContext::replace($template, $this->all());
     }
 
 }

@@ -3,7 +3,6 @@
 namespace OnaOnbir\OOAutoWeave\Core\DynamicContext;
 
 use Illuminate\Support\Arr;
-use OnaOnbir\OOAutoWeave\Core\DynamicContext\Functions\FunctionRegistry;
 
 class DynamicContext
 {
@@ -15,52 +14,34 @@ class DynamicContext
             }, $template);
         }
 
-        if (! is_string($template)) {
+        if (!is_string($template)) {
             return $template;
         }
 
         $placeholders = config('oo-auto-weave.placeholders');
-        $funcRegex = self::buildFunctionRegex($placeholders['function']);
         $varRegex = self::buildVariableRegex($placeholders['variable']);
         $varExactRegex = self::buildVariableExactRegex($placeholders['variable']);
 
-        // Template'in tamamı bir function call'u mu kontrol et
-        $funcRegexFull = '/^'.preg_quote($placeholders['function']['start'], '/').
-            '(\w+)\((.*?)(?:,\s*(\{.*\}))?\)'.
-            preg_quote($placeholders['function']['end'], '/').'$/';
-
-        if (preg_match($funcRegexFull, $template, $fullMatch)) {
-            return self::executeFunction($fullMatch, $context);
-        }
-
-        // Tek değişken kontrolü - function işlemlerinden ÖNCE kontrol et
+        // Eğer template sadece bir değişkense ve array dönerse direkt döndür
         if (preg_match($varExactRegex, $template, $singleMatch)) {
-            return self::resolveRaw(trim($singleMatch[1]), $context);
+            $resolved = self::resolveRaw(trim($singleMatch[1]), $context);
+            if (is_array($resolved)) {
+                return $resolved;
+            }
         }
 
-        // Önce tüm değişkenleri çöz (sadece mixed template'ler için)
-        $template = preg_replace_callback($varRegex, function ($matches) use ($context) {
+        // Karmaşık template içindeki tüm değişkenleri çöz
+        $template = preg_replace_callback($varRegex, function ($matches) use ($context, $varExactRegex) {
             $resolved = self::resolveRaw(trim($matches[1]), $context);
-
             return is_array($resolved) ? json_encode($resolved, JSON_UNESCAPED_UNICODE) : $resolved;
         }, $template);
 
-        // Sonra function çağrılarını en içten dışa doğru çöz
-        $maxIterations = 10; // Sonsuz döngü koruması
-        $iteration = 0;
-
-        do {
-            $lastTemplate = $template;
-            $template = self::processInnerMostFunctions($template, $context, $placeholders);
-            $iteration++;
-        } while ($template !== $lastTemplate && $iteration < $maxIterations);
-
-        // Tek değişken kontrolü - function işlemlerinden sonra tekrar kontrol et
+        // Eğer template tamamen tek değişkense, tekrar kontrol et
         if (preg_match($varExactRegex, $template, $singleMatch)) {
             return self::resolveRaw(trim($singleMatch[1]), $context);
         }
 
-        // Eğer template tamamı JSON string ise ve bu bir array ise, array olarak döndür
+        // Eğer template tamamı JSON array ise, onu döndür
         if (self::isJsonString($template)) {
             $decoded = json_decode($template, true);
             if (is_array($decoded)) {
@@ -69,96 +50,6 @@ class DynamicContext
         }
 
         return $template;
-    }
-
-    /**
-     * En içteki (nested olmayan) function çağrılarını bulur ve işler
-     */
-    protected static function processInnerMostFunctions(string $template, array $context, array $placeholders): string
-    {
-        $start = preg_quote($placeholders['function']['start'], '/');
-        $end = preg_quote($placeholders['function']['end'], '/');
-
-        // En içteki function'ları yakala - içinde başka function start bulunmayan
-        $pattern = "/{$start}(\w+)\(([^{$start}]+?)(?:,\s*(\{[^}]*\}))?\){$end}/";
-
-        return preg_replace_callback($pattern, function ($matches) use ($context) {
-            $result = self::executeFunction($matches, $context);
-
-            // Sonucu string context'e uygun formatta döndür
-            if (is_array($result)) {
-                // Array'leri re-index et (array_filter sonrası için)
-                $result = array_values($result);
-
-                // Array'i özel bir işaretleyici ile wrap et
-                return '___ARRAY_PLACEHOLDER___'.base64_encode(serialize($result)).'___END_ARRAY___';
-            }
-
-            return $result;
-        }, $template);
-    }
-
-    protected static function executeFunction(array $matches, array $context): mixed
-    {
-        $function = $matches[1];
-        $inner = trim($matches[2]);
-        $options = isset($matches[3]) ? json_decode($matches[3], true) : [];
-
-        // Array placeholder kontrolü - nested function sonuçları için
-        if (str_contains($inner, '___ARRAY_PLACEHOLDER___')) {
-            $inner = self::restoreArrayPlaceholders($inner);
-        } elseif (self::isJsonString($inner)) {
-            // JSON string mi kontrol et
-            $inner = json_decode($inner, true);
-        } else {
-            // Normal string olarak işle
-            $inner = self::replace($inner, $context);
-        }
-
-        return self::applyFunction($function, $inner, $options ?? []);
-    }
-
-    /**
-     * Array placeholder'ları gerçek array'lere çevirir
-     */
-    protected static function restoreArrayPlaceholders(string $input): mixed
-    {
-        // Tek bir array placeholder'ı mı kontrol et
-        if (preg_match('/^___ARRAY_PLACEHOLDER___(.+?)___END_ARRAY___$/', $input, $matches)) {
-            return unserialize(base64_decode($matches[1]));
-        }
-
-        // Multiple placeholder'lar varsa bunları da handle et
-        return preg_replace_callback('/___ARRAY_PLACEHOLDER___(.+?)___END_ARRAY___/', function ($matches) {
-            return json_encode(unserialize(base64_decode($matches[1])), JSON_UNESCAPED_UNICODE);
-        }, $input);
-    }
-
-    /**
-     * Bir string'in geçerli JSON olup olmadığını kontrol eder
-     */
-    protected static function isJsonString(string $str): bool
-    {
-        if (empty($str)) {
-            return false;
-        }
-
-        $trimmed = trim($str);
-        if (! in_array($trimmed[0], ['[', '{'])) {
-            return false;
-        }
-
-        json_decode($trimmed);
-
-        return json_last_error() === JSON_ERROR_NONE;
-    }
-
-    protected static function buildFunctionRegex(array $config): string
-    {
-        $start = preg_quote($config['start'], '/');
-        $end = preg_quote($config['end'], '/');
-
-        return "/{$start}(\w+)\((.*?)(?:,\s*(\{.*\}))?\){$end}/";
     }
 
     protected static function buildVariableRegex(array $config): string
@@ -187,21 +78,21 @@ class DynamicContext
             return self::resolveWildcardGroup($key, $context);
         }
 
-        return Arr::get(Arr::undot($context), $key);
+        $undottedContext = Arr::undot($context);
+        if (Arr::has($undottedContext, $key)) {
+            return Arr::get($undottedContext, $key);
+        }
+
+        return null;
     }
 
-    /**
-     * Joker karakter içeren bir yolu context içinde arar ve eşleşen değerleri döndürür.
-     */
     protected static function resolveWildcardGroup(string $wildcardPath, array $context): array
     {
         $resolvedValues = [];
 
-        // Wildcard pattern'ini regex'e çevir
         $escapedPath = preg_quote($wildcardPath, '/');
         $regexPattern = '/^' . str_replace('\*', '[^.]+', $escapedPath) . '$/';
 
-        // Context'teki tüm key'leri kontrol et
         foreach ($context as $flatKey => $value) {
             if (preg_match($regexPattern, $flatKey)) {
                 $resolvedValues[] = $value;
@@ -211,13 +102,18 @@ class DynamicContext
         return $resolvedValues;
     }
 
-    /**
-     * Verilen key'in wildcard pattern'e uyup uymadığını kontrol eder
-     */
-
-
-    protected static function applyFunction(string $function, mixed $value, array $options = []): mixed
+    protected static function isJsonString(string $str): bool
     {
-        return FunctionRegistry::call($function, $value, $options);
+        if (empty($str)) {
+            return false;
+        }
+
+        $trimmed = trim($str);
+        if (!in_array($trimmed[0], ['[', '{'])) {
+            return false;
+        }
+
+        json_decode($trimmed);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 }

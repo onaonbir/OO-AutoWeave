@@ -26,15 +26,31 @@ class ConditionalEdge extends BaseEdgeType
     public static function definition(): array
     {
         return [
-            'type' => 'conditional',
+            'type' => 'conditional_edge',
             'attributes' => [
-                'condition' => [
-                    'type' => 'equals',
-                    'key' => '',
-                    'value' => '',
-                ],
+                'operator' => 'equals',
+                'value' => null,
                 '__options__' => [
-                    'icon' => 'filter',
+                    'label' => 'Koşullu Bağlantı',
+                    'description' => 'Context üzerinde koşula göre edge geçişi.',
+                    'form_fields' => [
+                        [
+                            'key' => 'operator',
+                            'label' => 'Operatör',
+                            'type' => 'select',
+                            'options' => [
+                                ['label' => 'Eşittir', 'value' => 'equals'],
+                                ['label' => 'Değildir', 'value' => 'not_equals'],
+                            ],
+                            'required' => true,
+                        ],
+                        [
+                            'key' => 'value',
+                            'label' => 'Beklenen Değer',
+                            'type' => 'input.text',
+                            'required' => true,
+                        ],
+                    ],
                 ],
             ],
         ];

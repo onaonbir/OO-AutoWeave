@@ -31,7 +31,7 @@ class ModelTriggerNode extends BaseNodeHandler
                         [
                             'key' => 'model',
                             'label' => 'Model',
-                            'type' => 'input',
+                            'type' => 'input.text',
                             'required' => true,
                             'hint' => 'Tam sınıf adı: App\\Models\\User gibi',
                         ],

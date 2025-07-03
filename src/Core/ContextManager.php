@@ -76,6 +76,7 @@ class ContextManager
             'shared' => Arr::get($this->contextStack['shared'], $key, $default),
             'nodes' => $nodeKey ? Arr::get($this->contextStack['nodes'][$nodeKey] ?? [], $key, $default) : $default,
             'temp' => Arr::get($this->contextStack['temp'], $key, $default),
+            'system' => Arr::get($this->contextStack['system'], $key, $default),
             default => $default,
         };
     }

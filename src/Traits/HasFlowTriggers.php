@@ -40,6 +40,10 @@ trait HasFlowTriggers
                     [
                         'model' => $model->toArray(),
                         'model_class' => get_class($model),
+                        'model_extracted'=>\OnaOnbir\OOAutoWeave\Core\DynamicContext\ModelExtractor::extract(
+                            $model,
+                            $model::filterableColumns(2)
+                        ),
                         'event' => $event,
                         'changes' => method_exists($model, 'getDirty') ? $model->getDirty() : [],
                     ]

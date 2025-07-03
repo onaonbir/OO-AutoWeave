@@ -207,9 +207,7 @@ class ContextManager
             + collect($this->contextStack['nodes'] ?? [])->sum(fn ($ctx) => count($ctx));
     }
 
-
-
-    //TODO MUST BE CHANGE ??
+    // TODO MUST BE CHANGE ??
 
     public function resolveArrayWithTemplates(array|string|null $input): array
     {
@@ -229,7 +227,7 @@ class ContextManager
 
                 if (is_array($value)) {
                     $resolved = array_merge($resolved, $value);
-                } elseif (!is_null($value)) {
+                } elseif (! is_null($value)) {
                     $resolved[] = $value;
                 }
 
@@ -244,7 +242,7 @@ class ContextManager
 
     public function resolveValueFromTemplate(string|int|null $value): mixed
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $value;
         }
 

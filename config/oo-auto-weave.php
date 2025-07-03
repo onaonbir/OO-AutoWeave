@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'nodes'=>[
+        'path'=>base_path('app/AutoWeave/Nodes'),
+        'namespace' => 'App\\AutoWeave\\Nodes',
+    ],
+    'edges'=>[
+        'path'=>base_path('app/AutoWeave/Edges'),
+        'namespace' => 'App\\AutoWeave\\Edges',
+    ],
     'placeholders' => [
         'variable' => ['start' => '{{', 'end' => '}}'],
         'function' => ['start' => '@@', 'end' => '@@'],

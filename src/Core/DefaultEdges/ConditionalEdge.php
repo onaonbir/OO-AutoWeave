@@ -3,33 +3,36 @@
 namespace OnaOnbir\OOAutoWeave\Core\DefaultEdges;
 
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
-use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeTypeInterface;
+use OnaOnbir\OOAutoWeave\Core\EdgeHandler\BaseEdgeType;
+use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeInterface;
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
-class ConditionalEdge implements EdgeTypeInterface
+
+
+class ConditionalEdge extends BaseEdgeType
 {
     public function shouldPass(FlowRun $run, array $edge): bool
     {
-        $condition = $edge['condition'] ?? null;
-
-        if (! is_array($condition) || ! isset($condition['type'])) {
-            return false;
-        }
-
+        $condition = $edge['condition'] ?? [];
         $context = (new ContextManager($run))->all();
 
-        $key = $condition['key'] ?? null;
+        $actual = data_get($context, $condition['key'] ?? '');
         $expected = $condition['value'] ?? null;
-        $actual = data_get($context, $key);
 
-        return match ($condition['type']) {
+        return match ($condition['type'] ?? '') {
             'equals' => $actual == $expected,
             'not_equals' => $actual != $expected,
             'in' => in_array($actual, (array) $expected),
             'not_in' => !in_array($actual, (array) $expected),
-            'greater_than' => $actual > $expected,
-            'less_than' => $actual < $expected,
             default => false,
         };
+    }
+
+    public static function definition(): array
+    {
+        return [
+            'type' => 'conditional',
+            'attributes' => ['icon' => 'filter'],
+        ];
     }
 }

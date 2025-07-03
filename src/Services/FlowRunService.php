@@ -7,7 +7,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
-use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeTypeRegistry;
+use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeRegistry;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeHandlerResult;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeRegistry;
 use OnaOnbir\OOAutoWeave\Enums\NodeStatus;
@@ -232,8 +232,7 @@ class FlowRunService
         $type = $edge['type'] ?? 'default';
 
         try {
-            $evaluator = EdgeTypeRegistry::resolve($type);
-            return ! $evaluator->shouldPass($run, $edge);
+            return !EdgeRegistry::run($type, $run, $edge);
         } catch (\Throwable $e) {
             Log::error("Edge evaluation error [{$fromKey}→{$toKey}]: " . $e->getMessage());
             return true;

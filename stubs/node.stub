@@ -1,0 +1,27 @@
+<?php
+
+namespace {{ namespace }};
+
+use OnaOnbir\OOAutoWeave\Core\ContextManager;
+use OnaOnbir\OOAutoWeave\Core\NodeHandler\BaseNodeHandler;
+use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeHandlerResult;
+
+class {{ class }} extends BaseNodeHandler
+{
+    public function handle(array $node, ContextManager $manager): NodeHandlerResult
+    {
+        // TODO: Node çalıştığında yapılacak işler
+        return NodeHandlerResult::success();
+    }
+
+    public static function definition(): array
+    {
+        return [
+            'type' => '{{ type }}',
+            'attributes' => [
+                'icon' => 'zap',
+                '__options__' => [],
+            ],
+        ];
+    }
+}

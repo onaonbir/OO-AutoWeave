@@ -1,22 +1,25 @@
 <?php
 
-namespace OnaOnbir\OOAutoWeave\Core\DefaultEdges;
+namespace {{ namespace }};
 
 use OnaOnbir\OOAutoWeave\Core\EdgeHandler\BaseEdgeType;
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
-class DefaultEdge extends BaseEdgeType
+class {{ class }} extends BaseEdgeType
 {
     public function shouldPass(FlowRun $run, array $edge): bool
     {
+        // TODO: implement edge logic
         return true;
     }
 
     public static function definition(): array
     {
         return [
-            'type' => 'default',
-            'attributes' => ['icon' => 'arrow-right'],
+            'type' => '{{ type }}',
+            'attributes' => [
+                'icon' => 'arrow-right',
+            ],
         ];
     }
 }

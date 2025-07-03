@@ -8,7 +8,6 @@ use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
 class ContextManager
 {
-
     protected static ?self $instance = null;
 
     public static function bindToRun(FlowRun $run): self
@@ -214,5 +213,4 @@ class ContextManager
     {
         return DynamicContext::replace($template, $this->all());
     }
-
 }

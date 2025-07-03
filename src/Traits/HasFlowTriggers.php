@@ -40,7 +40,7 @@ trait HasFlowTriggers
                     [
                         'model' => $model->toArray(),
                         'model_class' => get_class($model),
-                        'model_extracted'=>\OnaOnbir\OOAutoWeave\Core\DynamicContext\ModelExtractor::extract(
+                        'model_extracted' => \OnaOnbir\OOAutoWeave\Core\DynamicContext\ModelExtractor::extract(
                             $model,
                             $model::filterableColumns(2)
                         ),

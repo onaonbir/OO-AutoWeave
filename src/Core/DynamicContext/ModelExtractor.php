@@ -81,5 +81,4 @@ class ModelExtractor
 
         return $results;
     }
-
 }

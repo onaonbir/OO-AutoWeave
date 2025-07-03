@@ -2,11 +2,15 @@
 
 namespace OnaOnbir\OOAutoWeave\Core\DynamicContext;
 
+use Illuminate\Support\Arr;
+
 class ModelExtractor
 {
-    public static function extract(mixed $model, array $filterableColumns): array
+    public static function extract(mixed $model, array $filterableColumns, bool $undot = false): array
     {
-        return self::processColumns($model, $filterableColumns);
+        $data = self::processColumns($model, $filterableColumns);
+
+        return $undot ? Arr::undot($data) : $data;
     }
 
     protected static function processColumns($model, array $columnTypes, string $prefix = ''): array

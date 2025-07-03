@@ -11,10 +11,10 @@ class Rule
         return new static;
     }
 
-    public function and(string $columnKey, string $operator, mixed $value): static
+    public function and(string $key, string $operator, mixed $value): static
     {
         $this->rules[] = [
-            'columnKey' => $columnKey,
+            'key' => $key,
             'operator' => $operator,
             'value' => $value,
             'type' => 'and',
@@ -23,10 +23,10 @@ class Rule
         return $this;
     }
 
-    public function or(string $columnKey, string $operator, mixed $value): static
+    public function or(string $key, string $operator, mixed $value): static
     {
         $this->rules[] = [
-            'columnKey' => $columnKey,
+            'key' => $key,
             'operator' => $operator,
             'value' => $value,
             'type' => 'or',

@@ -12,12 +12,12 @@ class RuleMatcher
         $isFirst = true;
 
         foreach ($rules as $rule) {
-            $columnKey = $rule['columnKey'] ?? null;
+            $key = $rule['key'] ?? null;
             $operator = $rule['operator'] ?? null;
             $value = $rule['value'] ?? null;
             $type = strtolower($rule['type'] ?? 'and');
 
-            if (! is_string($columnKey) || ! is_string($operator)) {
+            if (! is_string($key) || ! is_string($operator)) {
                 continue;
             }
 
@@ -26,7 +26,7 @@ class RuleMatcher
                 $value = [$value];
             }
 
-            $values = self::extractWildcardValues($context, explode('.', $columnKey));
+            $values = self::extractWildcardValues($context, explode('.', $key));
 
             // Eğer hiç değer yoksa bile, yine de evaluate edilmesini sağlayabiliriz (opsiyonel)
             $values = empty($values) ? [null] : $values;
@@ -126,16 +126,16 @@ class RuleMatcher
         $matches = [];
 
         foreach ($rules as $rule) {
-            $columnKey = $rule['columnKey'] ?? null;
+            $key = $rule['key'] ?? null;
             $operator = $rule['operator'] ?? null;
             $value = $rule['value'] ?? null;
 
-            if (! is_string($columnKey) || ! is_string($operator)) {
+            if (! is_string($key) || ! is_string($operator)) {
                 continue;
             }
 
             // wildcardlı key: r_users.*.username
-            $pattern = str_replace('\*', '\d+', preg_quote($columnKey));
+            $pattern = str_replace('\*', '\d+', preg_quote($key));
 
             foreach ($context as $flatKey => $itemValue) {
                 if (preg_match('/^'.$pattern.'$/', $flatKey)) {

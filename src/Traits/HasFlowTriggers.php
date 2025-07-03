@@ -28,6 +28,7 @@ trait HasFlowTriggers
                         return true;
                     }
                 }
+
                 return false;
             });
 

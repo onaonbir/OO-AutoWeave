@@ -2,8 +2,8 @@
 
 namespace OnaOnbir\OOAutoWeave\Core\EdgeHandler;
 
-
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
+use OnaOnbir\OOAutoWeave\Core\ContextManager;
 
 class EdgeRegistry
 {
@@ -20,8 +20,8 @@ class EdgeRegistry
             $definition = $executor::definition();
             $instance = app($executor);
 
-            $executor = function (FlowRun $run, array $edge) use ($instance) {
-                return $instance->shouldPass($run, $edge);
+            $executor = function (array $edge, ContextManager $manager) use ($instance) {
+                return $instance->shouldPass($edge, $manager);
             };
 
             $type = $definition['type'] ?? $type;
@@ -37,7 +37,7 @@ class EdgeRegistry
         ];
     }
 
-    public static function run(string $type, FlowRun $run, array $edge): bool
+    public static function run(string $type, array $edge, ContextManager $manager): bool
     {
         $definition = static::$map[$type] ?? null;
 
@@ -51,7 +51,7 @@ class EdgeRegistry
             return false;
         }
 
-        return $executor($run, $edge);
+        return $executor($edge, $manager);
     }
 
     public static function all(): array

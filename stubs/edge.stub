@@ -4,10 +4,11 @@ namespace {{ namespace }};
 
 use OnaOnbir\OOAutoWeave\Core\EdgeHandler\BaseEdgeType;
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
+use OnaOnbir\OOAutoWeave\Core\ContextManager;
 
 class {{ class }} extends BaseEdgeType
 {
-    public function shouldPass(FlowRun $run, array $edge): bool
+    public function shouldPass(array $edge, ContextManager $manager): bool
     {
         // TODO: implement edge logic
         return true;

@@ -2,17 +2,18 @@
 
 namespace OnaOnbir\OOAutoWeave\Core\EdgeHandler;
 
+use OnaOnbir\OOAutoWeave\Core\ContextManager;
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
 abstract class BaseEdgeType implements EdgeInterface
 {
-    abstract public function shouldPass(FlowRun $run, array $edge): bool;
+    abstract public function shouldPass(array $edge, ContextManager $manager): bool;
 
     public static function definition(): array
     {
         return [
             'type' => '',           // override edilmeli
-            'attributes' => [],     // örn: ['icon' => 'switch']
+            'attributes' => [],     // örn: ['icon' => 'switch'],
         ];
     }
 }

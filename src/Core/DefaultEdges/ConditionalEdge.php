@@ -7,16 +7,14 @@ use OnaOnbir\OOAutoWeave\Core\EdgeHandler\BaseEdgeType;
 use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeInterface;
 use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
-
-
 class ConditionalEdge extends BaseEdgeType
 {
-    public function shouldPass(FlowRun $run, array $edge): bool
+    public function shouldPass( array $edge, ContextManager $manager): bool
     {
         $condition = $edge['condition'] ?? [];
-        $context = (new ContextManager($run))->all();
 
-        $actual = data_get($context, $condition['key'] ?? '');
+
+        $actual = data_get($manager, $condition['key'] ?? '');
         $expected = $condition['value'] ?? null;
 
         return match ($condition['type'] ?? '') {

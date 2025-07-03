@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'placeholders' => [
+        'variable' => ['start' => '{{', 'end' => '}}'],
+        'function' => ['start' => '@@', 'end' => '@@'],
+    ],
     'tables' => [
         'flows' => 'oo_wa_flows',
         'flow_runs' => 'oo_wa_flow_runs',

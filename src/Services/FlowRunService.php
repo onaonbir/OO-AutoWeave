@@ -160,10 +160,7 @@ class FlowRunService
                 // MUST BE FLUSH TEMPORARY
                 $contextManager->flushTemp()->persist();
 
-                // Başarılıysa ve otomatik ilerleme aktifse sonraki node'ları işle
-                if ($result->success && ($node['auto_progress'] ?? false)) {
-                    $this->processNextNodes($run, $nodeKey, $states);
-                }
+
 
                 // TODO Bİ GARİP OLDU...
                 $existingStates = $run->node_states ?? [];
@@ -173,6 +170,11 @@ class FlowRunService
                     'node_states' => $mergedStates,
                     'status' => $allCompleted ? 'completed' : 'running',
                 ]);
+
+                // Başarılıysa ve otomatik ilerleme aktifse sonraki node'ları işle
+                if ($result->success && ($node['auto_progress'] ?? false)) {
+                    $this->processNextNodes($run, $nodeKey, $states);
+                }
 
                 return $run->fresh();
 

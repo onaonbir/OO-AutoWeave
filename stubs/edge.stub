@@ -20,6 +20,10 @@ class {{ class }} extends BaseEdgeType
             'type' => '{{ type }}',
             'attributes' => [
                 'icon' => 'arrow-right',
+                '__options__'=>[
+                    'label' => 'Label',
+                    'description' => 'Description',
+                ]
             ],
         ];
     }

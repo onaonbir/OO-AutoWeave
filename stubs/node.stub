@@ -20,7 +20,10 @@ class {{ class }} extends BaseNodeHandler
             'type' => '{{ type }}',
             'attributes' => [
                 'icon' => 'zap',
-                '__options__' => [],
+                '__options__'=>[
+                    'label' => 'Label',
+                    'description' => 'Description',
+                ]
             ],
         ];
     }

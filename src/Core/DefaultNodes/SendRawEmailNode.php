@@ -3,6 +3,7 @@
 namespace OnaOnbir\OOAutoWeave\Core\DefaultNodes;
 
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\BaseNodeHandler;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\NodeHandlerResult;
@@ -11,27 +12,35 @@ class SendRawEmailNode extends BaseNodeHandler
 {
     public function handle(array $node, ContextManager $manager): NodeHandlerResult
     {
-        $to = $node['attributes']['to'] ?? null;
+        $rawTo = $node['attributes']['to'] ?? null;
+
+        $emails = is_array($rawTo)
+            ? array_filter(array_map('trim', $rawTo))
+            : (is_string($rawTo) ? array_map('trim', explode(',', $rawTo)) : []);
+
+        $validEmails = array_filter($emails, function ($email) {
+            return Validator::make(['email' => $email], ['email' => 'required|email'])->passes();
+        });
+
+        if (empty($validEmails)) {
+            return NodeHandlerResult::error([], [], 'Hiç geçerli bir e-posta adresi bulunamadı.');
+        }
+
         $subject = $node['attributes']['subject'] ?? 'Notification';
         $message = $node['attributes']['message'] ?? 'No message provided.';
 
-        if (empty($to)) {
-            return NodeHandlerResult::error([], [], 'Recipient email (to) is required.');
-        }
-
         try {
-            Mail::raw($message, function ($mail) use ($to, $subject) {
-                $mail->to($to)->subject($subject);
+            Mail::raw($message, function ($mail) use ($validEmails, $subject) {
+                $mail->to($validEmails)->subject($subject);
             });
 
             return NodeHandlerResult::success([
-                'status' => 'email_sent_successfully',
-                'to' => $to,
+                'sent_to' => $validEmails,
                 'subject' => $subject,
                 'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Throwable $e) {
-            return NodeHandlerResult::error([], [], 'Mail error: '.$e->getMessage());
+            return NodeHandlerResult::error([], [], 'Mail gönderilemedi: '.$e->getMessage());
         }
     }
 

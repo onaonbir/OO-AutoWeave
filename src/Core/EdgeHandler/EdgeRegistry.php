@@ -57,4 +57,39 @@ class EdgeRegistry
     {
         return static::$map;
     }
+
+    public static function makeEdge(
+        string $type,
+        string $key,
+        string $from,
+        string $to,
+        array $attributes = []
+    ): array {
+        $definition = static::$map[$type] ?? null;
+
+        if (! $definition) {
+            throw new \InvalidArgumentException("Tanımlı bir edge tipi bulunamadı: {$type}");
+        }
+
+        $defaults = $definition['attributes'] ?? [];
+        $options = $defaults['__options__'] ?? [];
+
+        $cleanDefaults = collect($defaults)
+            ->reject(fn ($_, $key) => str_starts_with($key, '__'))
+            ->toArray();
+
+        $mergedAttributes = array_merge($cleanDefaults, $attributes);
+
+        return [
+            'type' => $type,
+            'key' => $key,
+            'connection' => [
+                'from' => $from,
+                'to' => $to,
+            ],
+
+            'attributes' => array_merge($mergedAttributes, ['__options__' => $options]),
+        ];
+    }
+
 }

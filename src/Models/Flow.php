@@ -60,6 +60,12 @@ class Flow extends Model
             ->firstWhere('key', $key);
     }
 
+    public function getEdge(string $key): ?array
+    {
+        return collect($this->structure['edges'] ?? [])
+            ->firstWhere('key', $key);
+    }
+
     public function deleteNode(string $key): bool
     {
         $structure = $this->structure;

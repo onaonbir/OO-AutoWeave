@@ -27,7 +27,16 @@ class ConditionalEdge extends BaseEdgeType
     {
         return [
             'type' => 'conditional',
-            'attributes' => ['icon' => 'filter'],
+            'attributes' => [
+                'condition' => [
+                    'type' => 'equals',
+                    'key' => '',
+                    'value' => '',
+                ],
+                '__options__' => [
+                    'icon' => 'filter',
+                ],
+            ],
         ];
     }
 }

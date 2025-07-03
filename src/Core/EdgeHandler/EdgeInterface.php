@@ -3,7 +3,6 @@
 namespace OnaOnbir\OOAutoWeave\Core\EdgeHandler;
 
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
-use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
 interface EdgeInterface
 {

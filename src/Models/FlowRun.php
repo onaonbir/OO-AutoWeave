@@ -5,7 +5,6 @@ namespace OnaOnbir\OOAutoWeave\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use OnaOnbir\OOAutoWeave\Enums\NodeStatus;
 use OnaOnbir\OOAutoWeave\Models\Traits\JsonCast;
 
@@ -243,14 +242,10 @@ class FlowRun extends Model
         $key = $condition['key'] ?? null;
         $value = $condition['value'] ?? null;
 
-
-
         $contextValue = Arr::get($context, $key);
         if (is_null($contextValue)) {
             return false;
         }
-
-
 
         switch ($conditionType) {
             case 'equals':

@@ -4,15 +4,12 @@ namespace OnaOnbir\OOAutoWeave\Core\DefaultEdges;
 
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
 use OnaOnbir\OOAutoWeave\Core\EdgeHandler\BaseEdgeType;
-use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeInterface;
-use OnaOnbir\OOAutoWeave\Models\FlowRun;
 
 class ConditionalEdge extends BaseEdgeType
 {
-    public function shouldPass( array $edge, ContextManager $manager): bool
+    public function shouldPass(array $edge, ContextManager $manager): bool
     {
         $condition = $edge['condition'] ?? [];
-
 
         $actual = data_get($manager, $condition['key'] ?? '');
         $expected = $condition['value'] ?? null;
@@ -21,7 +18,7 @@ class ConditionalEdge extends BaseEdgeType
             'equals' => $actual == $expected,
             'not_equals' => $actual != $expected,
             'in' => in_array($actual, (array) $expected),
-            'not_in' => !in_array($actual, (array) $expected),
+            'not_in' => ! in_array($actual, (array) $expected),
             default => false,
         };
     }

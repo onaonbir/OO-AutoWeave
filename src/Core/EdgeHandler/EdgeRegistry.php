@@ -2,7 +2,6 @@
 
 namespace OnaOnbir\OOAutoWeave\Core\EdgeHandler;
 
-use OnaOnbir\OOAutoWeave\Models\FlowRun;
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
 
 class EdgeRegistry

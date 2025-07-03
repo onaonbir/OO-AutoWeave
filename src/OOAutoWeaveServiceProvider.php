@@ -8,8 +8,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use OnaOnbir\OOAutoWeave\Console\Commands\MakeEdgeCommand;
 use OnaOnbir\OOAutoWeave\Console\Commands\MakeNodeCommand;
-use OnaOnbir\OOAutoWeave\Core\DefaultEdges\ConditionalEdge;
-use OnaOnbir\OOAutoWeave\Core\DefaultEdges\DefaultEdge;
 use OnaOnbir\OOAutoWeave\Core\EdgeHandler\BaseEdgeType;
 use OnaOnbir\OOAutoWeave\Core\EdgeHandler\EdgeRegistry;
 use OnaOnbir\OOAutoWeave\Core\NodeHandler\BaseNodeHandler;
@@ -113,7 +111,6 @@ class OOAutoWeaveServiceProvider extends ServiceProvider
         ]);
 
         $this->registerConfiguredEventListeners();
-
 
     }
 

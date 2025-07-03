@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class MakeNodeCommand extends Command
 {
     protected $signature = 'oo-auto-weave:make-node {name}';
+
     protected $description = 'Create a custom AutoWeave node handler';
 
     public function handle()
@@ -22,6 +23,7 @@ class MakeNodeCommand extends Command
 
         if (File::exists($filePath)) {
             $this->error("Node class already exists: {$filePath}");
+
             return;
         }
 

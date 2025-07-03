@@ -3,7 +3,6 @@
 namespace OnaOnbir\OOAutoWeave\Services;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OnaOnbir\OOAutoWeave\Core\ContextManager;
@@ -47,7 +46,7 @@ class FlowRunService
 
     public function getContextManager(FlowRun $run): ContextManager
     {
-        if (!$this->contextManager) {
+        if (! $this->contextManager) {
             $this->contextManager = new ContextManager($run);
         }
 
@@ -57,7 +56,7 @@ class FlowRunService
     protected function startAndProcessNode(FlowRun $run, string $nodeKey): void
     {
         $node = $run->getNode($nodeKey);
-        if (!$node) {
+        if (! $node) {
             throw new \Exception("Node '{$nodeKey}' bulunamadı.");
         }
 
@@ -75,7 +74,7 @@ class FlowRunService
         return DB::transaction(function () use ($run, $nodeKey) {
             $node = $run->getNode($nodeKey);
 
-            if (!$node) {
+            if (! $node) {
                 throw new \Exception("Node '{$nodeKey}' bulunamadı.");
             }
 
@@ -110,7 +109,7 @@ class FlowRunService
     {
         return DB::transaction(function () use ($run, $nodeKey) {
             $node = $run->getNode($nodeKey);
-            if (!$node) {
+            if (! $node) {
                 throw new \Exception("Node '{$nodeKey}' bulunamadı.");
             }
 
@@ -161,7 +160,6 @@ class FlowRunService
                 // MUST BE FLUSH TEMPORARY
                 $contextManager->flushTemp()->persist();
 
-
                 if ($result->success && ($node['auto_progress'] ?? false)) {
                     $this->processNextNodes($run, $nodeKey, $states);
                 }
@@ -174,7 +172,6 @@ class FlowRunService
                     'node_states' => $mergedStates,
                     'status' => $allCompleted ? 'completed' : 'running',
                 ]);
-
 
                 return $run->fresh();
 
@@ -224,14 +221,15 @@ class FlowRunService
 
     protected function shouldSkipEdge(FlowRun $run, string $fromKey, string $toKey): bool
     {
-        $edge = $run->getEdges()->first(fn($e) => $e['connection']['from'] === $fromKey && $e['connection']['to'] === $toKey);
+        $edge = $run->getEdges()->first(fn ($e) => $e['connection']['from'] === $fromKey && $e['connection']['to'] === $toKey);
 
         $type = $edge['type'] ?? 'default';
 
         try {
-            return !EdgeRegistry::run($type, $edge, $this->contextManager);
+            return ! EdgeRegistry::run($type, $edge, $this->contextManager);
         } catch (\Throwable $e) {
-            Log::error("Edge evaluation error [{$fromKey}→{$toKey}]: " . $e->getMessage());
+            Log::error("Edge evaluation error [{$fromKey}→{$toKey}]: ".$e->getMessage());
+
             return true;
         }
     }
@@ -243,7 +241,7 @@ class FlowRunService
     {
         foreach ($run->getNodes() as $node) {
             $status = $states[$node['key']]['status'] ?? 'queued';
-            if (!in_array($status, [NodeStatus::Completed->value, NodeStatus::Skipped->value])) {
+            if (! in_array($status, [NodeStatus::Completed->value, NodeStatus::Skipped->value])) {
                 return false;
             }
         }
@@ -338,9 +336,9 @@ class FlowRunService
 
         return [
             'status' => $status->value,
-            'started_at' => (float)$startedAt, // float formatta
-            'finished_at' => (float)$finishedAt, // float formatta
-            'total_runtime' => (float)$totalRuntime, // float formatta
+            'started_at' => (float) $startedAt, // float formatta
+            'finished_at' => (float) $finishedAt, // float formatta
+            'total_runtime' => (float) $totalRuntime, // float formatta
             'node' => [
                 'snapshot' => $snapshot,
             ],
@@ -352,7 +350,7 @@ class FlowRunService
         $edges = $run->getEdges();
 
         // next_node_key override
-        if (!empty($result->overrides['next_node_key'])) {
+        if (! empty($result->overrides['next_node_key'])) {
             $nextKey = $result->overrides['next_node_key'];
             $nextNode = $run->getNode($nextKey);
 
@@ -360,11 +358,11 @@ class FlowRunService
                 // Diğer çıkışları skiple
                 foreach ($edges->where('connection.from', $currentNodeKey) as $edge) {
                     $target = $edge['connection']['to'];
-                    if ($target !== $nextKey && !in_array($states[$target]['status'] ?? null, [
-                            NodeStatus::Completed->value,
-                            NodeStatus::Processing->value,
-                            NodeStatus::Skipped->value,
-                        ])) {
+                    if ($target !== $nextKey && ! in_array($states[$target]['status'] ?? null, [
+                        NodeStatus::Completed->value,
+                        NodeStatus::Processing->value,
+                        NodeStatus::Skipped->value,
+                    ])) {
                         $this->skipNode($run, $target, $states);
                     }
                 }
@@ -372,7 +370,7 @@ class FlowRunService
         }
 
         // skip_nodes override
-        if (!empty($result->overrides['skip_nodes'])) {
+        if (! empty($result->overrides['skip_nodes'])) {
             foreach ($result->overrides['skip_nodes'] as $skipKey) {
                 $this->skipNode($run, $skipKey, $states);
             }
@@ -383,7 +381,7 @@ class FlowRunService
 
     protected function skipNode(FlowRun $run, string $nodeKey, array &$states): void
     {
-        if (!isset($states[$nodeKey]) || $states[$nodeKey]['status'] === NodeStatus::Queued->value) {
+        if (! isset($states[$nodeKey]) || $states[$nodeKey]['status'] === NodeStatus::Queued->value) {
             $node = $run->getNode($nodeKey);
             if ($node) {
                 $states[$nodeKey] = $this->makeNodeState(

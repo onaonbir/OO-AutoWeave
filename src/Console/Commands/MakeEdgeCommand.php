@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class MakeEdgeCommand extends Command
 {
     protected $signature = 'oo-auto-weave:make-edge {name}';
+
     protected $description = 'Create a custom AutoWeave edge type';
 
     public function handle(): void
@@ -21,6 +22,7 @@ class MakeEdgeCommand extends Command
 
         if (! $path || ! $namespace) {
             $this->error('Please configure `edges.path` and `edges.namespace` in `oo-auto-weave.php` config file.');
+
             return;
         }
 
@@ -28,15 +30,17 @@ class MakeEdgeCommand extends Command
 
         if (File::exists($filePath)) {
             $this->error("Edge class already exists: {$filePath}");
+
             return;
         }
 
         File::ensureDirectoryExists($path);
 
-        $stubPath = __DIR__ . '/../../../stubs/edge.stub';
+        $stubPath = __DIR__.'/../../../stubs/edge.stub';
 
         if (! File::exists($stubPath)) {
             $this->error("Edge stub not found: {$stubPath}");
+
             return;
         }
 
@@ -49,7 +53,6 @@ class MakeEdgeCommand extends Command
             [$name, $namespace, $typeKebab],
             $stub
         );
-
 
         File::put($filePath, $content);
 
